@@ -14,12 +14,15 @@ type DashboardShellProps = {
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
+    
     const [collapsed, setCollapsed] = useState(false)
     const [mobileOpen, setMobileOpen] = useState(false)
     const authUser = useAuthUser()
     const [fallbackModules, setFallbackModules] = useState<AppModule[]>([])
     const modules = authUser?.modules ?? fallbackModules
+    
     useEffect(() => {
+    
         if (authUser) return
 
         let isActive = true
