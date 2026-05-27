@@ -1,12 +1,28 @@
 "use client"
 
 import Link from "next/link"
-import { LayoutDashboard, Menu, Settings, Users } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+    BadgeCheck,
+    BriefcaseBusiness,
+    Car,
+    ChartBar,
+    CheckCheck,
+    Circle,
+    KeyRound,
+    LayoutDashboard,
+    Menu,
+    Settings,
+    Shield,
+    Users,
+} from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { type AppModule } from "@/lib/auth-storage"
 import { cn } from "@/lib/utils"
 
 type DashboardSidebarProps = {
+    modules: AppModule[]
     collapsed: boolean
     onToggle: () => void
     onNavigate?: () => void
@@ -14,13 +30,84 @@ type DashboardSidebarProps = {
     className?: string
 }
 
-const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Users", href: "/dashboard/users", icon: Users },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
-]
+const iconMap: Record<string, LucideIcon> = {
+    "layout-dashboard": LayoutDashboard,
+    "briefcase-business": BriefcaseBusiness,
+    car: Car,
+    "chart-bar": ChartBar,
+    "check-check": CheckCheck,
+    shield: Shield,
+    users: Users,
+    "badge-check": BadgeCheck,
+    "key-round": KeyRound,
+    settings: Settings,
+}
+
+function getIcon(name: string) {
+    return iconMap[name] ?? Circle
+}
+
+function ModuleTree({
+    modules,
+    collapsed,
+    onNavigate,
+    level = 0,
+}: {
+    modules: AppModule[]
+    collapsed: boolean
+    onNavigate?: () => void
+    level?: number
+}) {
+    return (
+        <div className={cn("space-y-1", level > 0 && "pl-3") }>
+            {modules
+                .filter((module) => module.is_active)
+                .sort((left, right) => left.sort_order - right.sort_order)
+                .map((module) => {
+                    const Icon = getIcon(module.icon)
+                    const hasChildren = module.children.length > 0
+
+                    if (hasChildren && !module.route) {
+                        return (
+                            <div key={module.id} className="space-y-2 pt-2 first:pt-0">
+                                {!collapsed ? (
+                                    <p className="px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                        {module.name}
+                                    </p>
+                                ) : null}
+                                <ModuleTree
+                                    modules={module.children}
+                                    collapsed={collapsed}
+                                    onNavigate={onNavigate}
+                                    level={level + 1}
+                                />
+                            </div>
+                        )
+                    }
+
+                    return (
+                        <Link
+                            key={module.id}
+                            href={module.route ?? "/dashboard"}
+                            onClick={onNavigate}
+                            className={cn(
+                                buttonVariants({ variant: "ghost" }),
+                                "h-10 w-full justify-start text-sm sm:text-base",
+                                collapsed && "justify-center px-0",
+                                level > 0 && "pl-4"
+                            )}
+                        >
+                            <Icon className="size-4" />
+                            {!collapsed ? <span>{module.name}</span> : null}
+                        </Link>
+                    )
+                })}
+        </div>
+    )
+}
 
 export function DashboardSidebar({
+    modules,
     collapsed,
     onToggle,
     onNavigate,
@@ -51,23 +138,7 @@ export function DashboardSidebar({
             </div>
 
             <nav className="space-y-1">
-                {navItems.map((item) => {
-                    const Icon = item.icon
-
-                    return (
-                        <Button
-                            key={item.label}
-                            asChild
-                            variant="ghost"
-                            className={cn("h-10 w-full justify-start text-sm sm:text-base", collapsed && "justify-center px-0")}
-                        >
-                            <Link href={item.href} onClick={onNavigate}>
-                                <Icon className="size-4" />
-                                {!collapsed ? <span>{item.label}</span> : null}
-                            </Link>
-                        </Button>
-                    )
-                })}
+                <ModuleTree modules={modules} collapsed={collapsed} onNavigate={onNavigate} />
             </nav>
         </aside>
     )
