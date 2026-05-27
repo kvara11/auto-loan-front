@@ -2,13 +2,12 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { isAxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { registerSchema, RegisterInput } from "@/lib/validations/auth";
 import { API_ROUTES } from "@/lib/routes";
-import axiosInstance from "@/lib/axios";
+import { api, getApiErrorMessage } from "@/lib/axios";
 
 import {
   Form,
@@ -40,45 +39,43 @@ export default function RegisterPage() {
     try {
       setError(null);
 
-      await axiosInstance.post(API_ROUTES.auth.register, data);
+      await api.post(API_ROUTES.auth.register, data);
       router.push("/login");
 
     } catch (error: unknown) {
-      const message = isAxiosError<{ message?: string }>(error)
-        ? error.response?.data?.message
-        : undefined;
+      const message = getApiErrorMessage(error);
 
       setError(message || "რეგისტრაციისას მოხდა შეცდომა.");
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gray-50 dark:bg-zinc-950">
-      <div className="w-full max-w-md space-y-8 bg-white dark:bg-zinc-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800">
+    <div className="bg-gray-50 dark:bg-zinc-950 flex min-h-screen items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-8">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">ანგარიშის შექმნა</h1>
+          <h1 className="text-lg font-semibold tracking-tight sm:text-xl lg:text-2xl">ანგარიშის შექმნა</h1>
           {/* <p className="text-sm text-gray-500 dark:text-zinc-400">
             Enter your details below to create your account
           </p> */}
         </div>
 
         {error && (
-          <div className="p-3 text-sm text-red-600 bg-red-50 dark:text-red-400 dark:bg-red-950/50 rounded-md">
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400 sm:text-base">
             {error}
           </div>
         )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
                 name="first_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>სახელი</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">სახელი</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} />
+                      <Input className="h-10 text-sm sm:text-base" placeholder="John" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -89,9 +86,9 @@ export default function RegisterPage() {
                 name="last_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>გვარი</FormLabel>
+                    <FormLabel className="text-sm sm:text-base">გვარი</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} />
+                      <Input className="h-10 text-sm sm:text-base" placeholder="Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -104,9 +101,9 @@ export default function RegisterPage() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>username</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">მომხმარებლის სახელი</FormLabel>
                   <FormControl>
-                    <Input placeholder="johndoe" {...field} />
+                    <Input className="h-10 text-sm sm:text-base" placeholder="johndoe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -118,9 +115,14 @@ export default function RegisterPage() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>იმეილი</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">იმეილი</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="john@example.com" {...field} />
+                    <Input
+                      type="email"
+                      className="h-10 text-sm sm:text-base"
+                      placeholder="john@example.com"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,16 +134,25 @@ export default function RegisterPage() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>პაროლი</FormLabel>
+                  <FormLabel className="text-sm sm:text-base">პაროლი</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
+                    <Input
+                      type="password"
+                      className="h-10 text-sm sm:text-base"
+                      placeholder="••••••••"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+            <Button
+              type="submit"
+              className="h-10 w-full text-sm sm:text-base"
+              disabled={form.formState.isSubmitting}
+            >
               {form.formState.isSubmitting ? "პროგრესშია..." : "რეგისტრაცია"}
             </Button>
           </form>
