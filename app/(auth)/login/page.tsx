@@ -1,9 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 import { loginSchema, LoginInput } from "@/lib/validations/auth";
 import { API_ROUTES } from "@/lib/routes";
@@ -24,14 +24,51 @@ import { Button } from "@/components/ui/button";
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       username: "",
       password: "",
+      remember_me: false,
     },
   });
+
+  useEffect(() => {
+    let active = true;
+
+    const bootstrap = async () => {
+      try {
+        const response = await api.get<{ user?: AuthUser }>(API_ROUTES.auth.me);
+
+        if (!active || !response.data?.user) return;
+
+        saveAuthUser(response.data.user);
+        router.replace("/dashboard");
+      } catch {
+        if (active) {
+          setIsCheckingSession(false);
+        }
+      }
+    };
+
+    void bootstrap();
+
+    return () => {
+      active = false;
+    };
+  }, [router]);
+
+  if (isCheckingSession) {
+    return (
+      <div className="bg-gray-50 dark:bg-zinc-950 flex min-h-screen items-center justify-center px-4 py-6 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-500 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:text-base">
+          Checking session...
+        </div>
+      </div>
+    );
+  }
 
   const onSubmit = async (data: LoginInput) => {
     try {
@@ -40,7 +77,7 @@ export default function LoginPage() {
       const response = await api.post<{ user?: AuthUser }, LoginInput>(API_ROUTES.auth.login, data);
 
       if (response.data?.user) {
-        saveAuthUser(response.data.user);
+        saveAuthUser(response.data.user, data.remember_me);
       }
 
       router.push("/dashboard");
@@ -101,6 +138,29 @@ export default function LoginPage() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="remember_me"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center gap-3 space-y-0 rounded-lg border p-3">
+                  <FormControl>
+                    <input
+                      type="checkbox"
+                      checked={field.value}
+                      onChange={(event: React.ChangeEvent<HTMLInputElement>) => field.onChange(event.target.checked)}
+                      className="mt-0.5 size-4 shrink-0 rounded-sm border border-input bg-background shadow-sm outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 accent-foreground"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm sm:text-base">დამიმახსოვრე</FormLabel>
+                    <p className="text-muted-foreground text-xs sm:text-sm">
+                      ამ კომპიუტერზე უფრო ხანგრძლივად შეინარჩუნებს შესვლას.
+                    </p>
+                  </div>
                 </FormItem>
               )}
             />

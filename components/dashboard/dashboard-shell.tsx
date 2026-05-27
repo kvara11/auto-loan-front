@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { DashboardShellStateProvider, getStoredSidebarCollapsed } from "@/components/dashboard/dashboard-shell-state"
 import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar"
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
 import { api } from "@/lib/axios"
@@ -14,15 +15,13 @@ type DashboardShellProps = {
 }
 
 export function DashboardShell({ children }: DashboardShellProps) {
-    
-    const [collapsed, setCollapsed] = useState(false)
+    const [collapsed, setCollapsed] = useState(() => getStoredSidebarCollapsed() ?? false)
     const [mobileOpen, setMobileOpen] = useState(false)
     const authUser = useAuthUser()
     const [fallbackModules, setFallbackModules] = useState<AppModule[]>([])
     const modules = authUser?.modules ?? fallbackModules
-    
+
     useEffect(() => {
-    
         if (authUser) return
 
         let isActive = true
@@ -48,38 +47,41 @@ export function DashboardShell({ children }: DashboardShellProps) {
             isActive = false
         }
     }, [authUser])
-    return (
-        <div className="bg-muted/30 min-h-screen">
-            <div className="flex min-h-screen">
-                <div className="hidden lg:block">
-                    <DashboardSidebar
-                        modules={modules}
-                        collapsed={collapsed}
-                        onToggle={() => setCollapsed((value) => !value)}
-                    />
-                </div>
 
-                <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-                    <SheetContent side="left" className="p-0 lg:hidden">
-                        <SheetTitle className="sr-only">Navigation</SheetTitle>
+    return (
+        <DashboardShellStateProvider value={{ collapsed, setCollapsed }}>
+            <div className="bg-muted/30 min-h-screen">
+                <div className="flex min-h-screen">
+                    <div className="hidden lg:block">
                         <DashboardSidebar
                             modules={modules}
-                            collapsed={false}
-                            hideToggle
-                            className="w-full border-r-0"
-                            onToggle={() => undefined}
-                            onNavigate={() => setMobileOpen(false)}
+                            collapsed={collapsed}
+                            onToggle={() => setCollapsed((value) => !value)}
                         />
-                    </SheetContent>
-                </Sheet>
+                    </div>
 
-                <div className="flex min-h-screen flex-1 flex-col">
-                    <DashboardHeader onOpenMobileMenu={() => setMobileOpen(true)} />
-                    <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
-                        <div className="mx-auto w-full max-w-7xl">{children}</div>
-                    </main>
+                    <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+                        <SheetContent side="left" className="p-0 lg:hidden">
+                            <SheetTitle className="sr-only">Navigation</SheetTitle>
+                            <DashboardSidebar
+                                modules={modules}
+                                collapsed={false}
+                                hideToggle
+                                className="w-full border-r-0"
+                                onToggle={() => undefined}
+                                onNavigate={() => setMobileOpen(false)}
+                            />
+                        </SheetContent>
+                    </Sheet>
+
+                    <div className="flex min-h-screen flex-1 flex-col">
+                        <DashboardHeader onOpenMobileMenu={() => setMobileOpen(true)} />
+                        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
+                            <div className="mx-auto w-full max-w-7xl">{children}</div>
+                        </main>
+                    </div>
                 </div>
             </div>
-        </div>
+        </DashboardShellStateProvider>
     )
 }

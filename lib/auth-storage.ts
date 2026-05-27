@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react"
 
 const AUTH_USER_KEY = "auth:user"
+const AUTH_SYNC_KEY = "auth:user:sync"
 let cachedAuthUser: AuthUser | null = null
 let cachedAuthUserRaw = ""
 
@@ -28,12 +29,15 @@ export type AuthUser = {
     modules: AppModule[]
 }
 
-export function saveAuthUser(user: AuthUser) {
+export function saveAuthUser(user: AuthUser, rememberMe = false) {
     if (typeof window === "undefined") return
     const raw = JSON.stringify(user)
     cachedAuthUser = user
     cachedAuthUserRaw = raw
+
     window.sessionStorage.setItem(AUTH_USER_KEY, raw)
+    window.localStorage.setItem(AUTH_SYNC_KEY, `${Date.now()}:${rememberMe ? "1" : "0"}`)
+
     window.dispatchEvent(new Event("auth-user-change"))
 }
 
@@ -63,17 +67,29 @@ export function getAuthUser() {
 export function clearAuthUser() {
     if (typeof window === "undefined") return
     window.sessionStorage.removeItem(AUTH_USER_KEY)
+    window.localStorage.setItem(AUTH_SYNC_KEY, `${Date.now()}:clear`)
     cachedAuthUser = null
     cachedAuthUserRaw = ""
     window.dispatchEvent(new Event("auth-user-change"))
 }
 
+function handleStorageEvent(event: StorageEvent, callback: () => void) {
+    if (event.key !== AUTH_SYNC_KEY) return
+
+    window.sessionStorage.removeItem(AUTH_USER_KEY)
+    cachedAuthUser = null
+    cachedAuthUserRaw = ""
+    callback()
+}
+
 function subscribe(callback: () => void) {
-    window.addEventListener("storage", callback)
+    const onStorage = (event: StorageEvent) => handleStorageEvent(event, callback)
+
+    window.addEventListener("storage", onStorage)
     window.addEventListener("auth-user-change", callback)
 
     return () => {
-        window.removeEventListener("storage", callback)
+        window.removeEventListener("storage", onStorage)
         window.removeEventListener("auth-user-change", callback)
     }
 }
