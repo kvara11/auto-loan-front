@@ -57,6 +57,12 @@ const defaultValues: UserFormInput = {
 }
 
 export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit }: UserFormDialogProps) {
+
+  const noAutoFillProps = {
+    "data-1p-ignore": "true",
+    "data-lpignore": "true",
+  } as const
+
   const form = useForm<UserFormInput>({
     resolver: zodResolver(userFormSchema),
     defaultValues,
@@ -99,7 +105,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <FormField
                 control={form.control}
@@ -108,7 +114,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input className="h-10" placeholder="John" {...field} />
+                      <Input className="h-10" placeholder="John" {...field} {...noAutoFillProps} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,7 +128,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input className="h-10" placeholder="Doe" {...field} />
+                      <Input className="h-10" placeholder="Doe" {...field} {...noAutoFillProps} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -137,7 +143,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <FormControl>
-                    <Input className="h-10" placeholder="johndoe" {...field} />
+                    <Input className="h-10" placeholder="johndoe" {...field} {...noAutoFillProps} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -151,7 +157,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input className="h-10" placeholder="john@example.com" type="email" {...field} />
+                    <Input className="h-10" placeholder="john@example.com" type="email" {...field} {...noAutoFillProps} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -165,7 +171,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input className="h-10" placeholder="••••••••" type="password" {...field} />
+                    <Input className="h-10" placeholder="••••••••" type="password" {...field} {...noAutoFillProps} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
