@@ -6,9 +6,9 @@ export default function UsersPage() {
     <DashboardShell>
       <section className="space-y-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">User Administration</h1>
+          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">მომხმარებლის ადმინისტრირება</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
-            Create, update, and control user access with local mock state.
+            შექმენით, განაახლეთ და აკონტროლეთ მომხმარებლები და წვდომები.
           </p>
         </div>
 

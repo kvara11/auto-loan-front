@@ -22,14 +22,14 @@ export type UserFormInput = RegisterInput & {
 }
 
 export const roleOptions: Array<{ label: string; value: UserRole }> = [
-  { label: "Admin", value: "admin" },
-  { label: "Manager", value: "manager" },
-  { label: "User", value: "user" },
+  { label: "ადმინი", value: "admin" },
+  { label: "მენეჯერი", value: "manager" },
+  { label: "მომხმარებელი", value: "user" },
 ]
 
 export const statusOptions: Array<{ label: string; value: UserStatus }> = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
+  { label: "აქტიური", value: "active" },
+  { label: "გაუქმებული", value: "inactive" },
 ]
 
 export const defaultFilters: UserFilters = {

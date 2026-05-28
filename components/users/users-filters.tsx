@@ -35,7 +35,7 @@ export function UsersFilters({ value, onChange }: UsersFiltersProps) {
           <Input
             value={value.search}
             onChange={(event) => onChange({ ...value, search: event.target.value })}
-            placeholder="Search by name, username, or email"
+            placeholder="მოძებნეთ სახელით, მომხმარებლის სახელით ან ელ. ფოსტით"
             className="h-10 pl-9"
           />
         </div>
@@ -45,7 +45,7 @@ export function UsersFilters({ value, onChange }: UsersFiltersProps) {
             <SelectValue placeholder="Role" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All roles</SelectItem>
+            <SelectItem value="all">როლი</SelectItem>
             {roleOptions.map((role) => (
               <SelectItem key={role.value} value={role.value}>
                 {role.label}
@@ -62,7 +62,7 @@ export function UsersFilters({ value, onChange }: UsersFiltersProps) {
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
+            <SelectItem value="all">სტატუსი</SelectItem>
             {statusOptions.map((status) => (
               <SelectItem key={status.value} value={status.value}>
                 {status.label}
@@ -78,7 +78,7 @@ export function UsersFilters({ value, onChange }: UsersFiltersProps) {
           disabled={!hasActiveFilters}
           onClick={() => onChange(defaultFilters)}
         >
-          Clear filters
+          გასუფთავება
         </Button>
       </div>
     </div>

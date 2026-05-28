@@ -4,6 +4,7 @@ import { Edit, Power, Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Loading } from "@/components/ui/loading"
 import {
   Table,
   TableBody,
@@ -34,7 +35,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }:
   if (loading) {
     return (
       <div className="flex min-h-65 items-center justify-center rounded-xl border">
-        <p className="text-muted-foreground text-sm sm:text-base">Loading users...</p>
+        <Loading />
       </div>
     )
   }
@@ -42,10 +43,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }:
   if (users.length === 0) {
     return (
       <div className="flex min-h-65 flex-col items-center justify-center gap-2 rounded-xl border border-dashed px-6 text-center">
-        <p className="text-base font-medium sm:text-lg">No users found</p>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Try adjusting filters or create a new user.
-        </p>
+        <p className="text-base font-medium sm:text-lg">მომხმარებელი ვერ მოიძებნა</p>
       </div>
     )
   }
@@ -55,13 +53,13 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }:
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Created At</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead>სახელი</TableHead>
+            <TableHead>გვარი</TableHead>
+            <TableHead>იმეილი</TableHead>
+            <TableHead>როლი</TableHead>
+            <TableHead>სტატუსი</TableHead>
+            <TableHead>შექმნის დრო</TableHead>
+            <TableHead className="text-right">ოპერირება</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -79,18 +77,22 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }:
               <TableCell>{formatDate(user.createdAt)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" size="sm" onClick={() => onEdit(user)}>
+                  <Button type="button" variant="outline" className="bg-yellow-100" size="sm" onClick={() => onEdit(user)}>
                     <Edit className="size-3.5" />
-                    Edit
                   </Button>
-                  <Button type="button" variant="outline" size="sm" onClick={() => onToggleStatus(user.id)}>
-                    <Power className="size-3.5" />
-                    {user.status === "active" ? "Deactivate" : "Activate"}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onToggleStatus(user.id)}
+                    aria-label={user.status === "active" ? "Deactivate user" : "Activate user"}
+                    className={`${user.status === "active" ? "bg-red-100" : "bg-green-100"}`}
+                  >
+                    <Power className='size-3.5 text-back' />
                   </Button>
-                  <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(user)}>
+                  {/* <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(user)} aria-label="Delete user">
                     <Trash2 className="size-3.5" />
-                    Delete
-                  </Button>
+                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>

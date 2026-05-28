@@ -98,9 +98,9 @@ export function UsersManagement() {
     <Card>
       <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <CardTitle className="text-base sm:text-lg">Users</CardTitle>
+          <CardTitle className="text-base sm:text-lg">მომხმარებლები</CardTitle>
           <CardDescription className="text-sm sm:text-base">
-            Manage account access, roles, and status for platform users.
+            პლატფორმის მომხმარებლების ანგარიშზე წვდომის, როლებისა და სტატუსის მართვა.
           </CardDescription>
         </div>
         <Button
@@ -109,7 +109,7 @@ export function UsersManagement() {
           onClick={() => setFormDialog({ open: true, mode: "create", user: undefined })}
         >
           <Plus className="size-4" />
-          Create User
+          შექმენით ახალი
         </Button>
       </CardHeader>
 
