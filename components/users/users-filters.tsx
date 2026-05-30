@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/select"
 import {
   defaultFilters,
-  roleOptions,
   statusOptions,
   type UserFilters,
 } from "@/components/users/users-types"
@@ -21,9 +20,10 @@ import {
 type UsersFiltersProps = {
   value: UserFilters
   onChange: (value: UserFilters) => void
+  roles: Array<{ label: string; value: string }>
 }
 
-export function UsersFilters({ value, onChange }: UsersFiltersProps) {
+export function UsersFilters({ value, onChange, roles }: UsersFiltersProps) {
   const hasActiveFilters =
     value.search.trim() !== "" || value.role !== defaultFilters.role || value.status !== defaultFilters.status
 
@@ -46,7 +46,7 @@ export function UsersFilters({ value, onChange }: UsersFiltersProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">როლი</SelectItem>
-            {roleOptions.map((role) => (
+            {roles.map((role) => (
               <SelectItem key={role.value} value={role.value}>
                 {role.label}
               </SelectItem>

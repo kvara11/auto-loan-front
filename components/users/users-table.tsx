@@ -1,6 +1,6 @@
 "use client"
 
-import { Edit, Power, Trash2 } from "lucide-react"
+import { Edit, Power } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,10 +20,13 @@ type UsersTableProps = {
   loading: boolean
   onEdit: (user: UserRecord) => void
   onToggleStatus: (userId: string) => void
-  onDelete: (user: UserRecord) => void
 }
 
 function formatDate(value: string) {
+  if (!value) {
+    return "-"
+  }
+
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
@@ -31,7 +34,11 @@ function formatDate(value: string) {
   }).format(new Date(value))
 }
 
-export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }: UsersTableProps) {
+function formatRole(value: string) {
+  return value.replace(/-/g, " ")
+}
+
+export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTableProps) {
   if (loading) {
     return (
       <div className="flex min-h-65 items-center justify-center rounded-xl border">
@@ -65,16 +72,16 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, onDelete }:
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell className="font-medium">{user.first_name} {user.last_name}</TableCell>
-              <TableCell>{user.username}</TableCell>
+              <TableCell>{user.first_name}</TableCell>
+              <TableCell>{user.last_name}</TableCell>
               <TableCell>{user.email}</TableCell>
-              <TableCell className="capitalize">{user.role}</TableCell>
+              <TableCell>{user.roleDisplayName ?? formatRole(user.role)}</TableCell>
               <TableCell>
                 <Badge variant={user.status === "active" ? "success" : "inactive"} className="capitalize">
                   {user.status}
                 </Badge>
               </TableCell>
-              <TableCell>{formatDate(user.createdAt)}</TableCell>
+              <TableCell>{formatDate(user.created_at)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" className="bg-yellow-100" size="sm" onClick={() => onEdit(user)}>

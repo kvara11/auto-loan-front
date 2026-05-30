@@ -7,6 +7,10 @@ export const API_ROUTES = {
         changePassword: "/api/auth/change-password",
         logout: "/api/auth/logout",
     },
+    admin: {
+        users: "/api/admin/users",
+        roles: "/api/admin/roles",
+    },
     settings: {
         index: "/api/settings",
     },

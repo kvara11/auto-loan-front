@@ -31,10 +31,10 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { registerSchema } from "@/lib/validations/auth"
-import { roleOptions, statusOptions, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import { statusOptions, type UserFormInput, type UserRecord } from "@/components/users/users-types"
 
 const userFormSchema = registerSchema.extend({
-  role: z.enum(["admin", "manager", "user"]),
+  role: z.string().min(1, "როლი სავალდებულოა"),
   status: z.enum(["active", "inactive"]),
 })
 
@@ -44,6 +44,7 @@ type UserFormDialogProps = {
   mode: "create" | "edit"
   initialUser?: UserRecord
   onSubmit: (value: UserFormInput) => void
+  roles: Array<{ label: string; value: string }>
 }
 
 const defaultValues: UserFormInput = {
@@ -52,11 +53,11 @@ const defaultValues: UserFormInput = {
   username: "",
   email: "",
   password: "",
-  role: "user",
+  role: "",
   status: "active",
 }
 
-export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit }: UserFormDialogProps) {
+export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles }: UserFormDialogProps) {
 
   const noAutoFillProps = {
     "data-1p-ignore": "true",
@@ -112,7 +113,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 name="first_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel>სახელი</FormLabel>
                     <FormControl>
                       <Input className="h-10" placeholder="John" {...field} {...noAutoFillProps} />
                     </FormControl>
@@ -126,7 +127,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 name="last_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel>გვარი</FormLabel>
                     <FormControl>
                       <Input className="h-10" placeholder="Doe" {...field} {...noAutoFillProps} />
                     </FormControl>
@@ -141,7 +142,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>მომხმარებლის სახელი</FormLabel>
                   <FormControl>
                     <Input className="h-10" placeholder="johndoe" {...field} {...noAutoFillProps} />
                   </FormControl>
@@ -155,7 +156,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>იმეილი</FormLabel>
                   <FormControl>
                     <Input className="h-10" placeholder="john@example.com" type="email" {...field} {...noAutoFillProps} />
                   </FormControl>
@@ -169,7 +170,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>პაროლი</FormLabel>
                   <FormControl>
                     <Input className="h-10" placeholder="••••••••" type="password" {...field} {...noAutoFillProps} autoComplete="new-password" />
                   </FormControl>
@@ -184,7 +185,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 name="role"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Role</FormLabel>
+                    <FormLabel>როლი</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="h-10">
@@ -192,7 +193,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {roleOptions.map((role) => (
+                        {roles.map((role) => (
                           <SelectItem key={role.value} value={role.value}>
                             {role.label}
                           </SelectItem>
@@ -209,7 +210,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 name="status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
+                    <FormLabel>სტატუსი</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="h-10">

@@ -9,8 +9,62 @@ import { UsersFilters } from "@/components/users/users-filters"
 import { UsersTable } from "@/components/users/users-table"
 import { UserFormDialog } from "@/components/users/user-form-dialog"
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
-import { mockUsers } from "@/components/users/mock-users"
 import { defaultFilters, type UserFilters, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import { api } from "@/lib/axios"
+import { API_ROUTES } from "@/lib/routes"
+
+type AdminUserResponse = {
+  id: number
+  first_name: string
+  last_name: string
+  username: string
+  email: string
+  role: {
+    id: number
+    name: string
+    display_name: string
+  }
+  active: boolean
+  created_at: string
+}
+
+type AdminRoleResponse = {
+  id: number
+  name: string
+  display_name: string
+  permissions: string[]
+}
+
+type RoleOption = {
+  label: string
+  value: string
+}
+
+function toUserRecord(user: AdminUserResponse): UserRecord {
+  return {
+    id: String(user.id),
+    first_name: user.first_name,
+    last_name: user.last_name,
+    username: user.username,
+    email: user.email,
+    password: "",
+    role: user.role.name,
+    roleDisplayName: user.role.display_name,
+    status: user.active ? "active" : "inactive",
+    created_at: user.created_at,
+  }
+}
+
+function toRoleOption(role: AdminRoleResponse): RoleOption {
+  return {
+    label: role.display_name,
+    value: role.name,
+  }
+}
+
+function getRoleDisplayName(value: string, roles: RoleOption[]) {
+  return roles.find((role) => role.value === value)?.label ?? value.replace(/-/g, " ")
+}
 
 type FormDialogState = {
   open: boolean
@@ -20,18 +74,41 @@ type FormDialogState = {
 
 export function UsersManagement() {
   const [users, setUsers] = useState<UserRecord[]>([])
+  const [roles, setRoles] = useState<RoleOption[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<UserFilters>(defaultFilters)
   const [formDialog, setFormDialog] = useState<FormDialogState>({ open: false, mode: "create" })
   const [userToDelete, setUserToDelete] = useState<UserRecord | undefined>()
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setUsers(mockUsers)
-      setLoading(false)
-    }, 450)
+    let isMounted = true
 
-    return () => window.clearTimeout(timeoutId)
+    const loadUsers = async () => {
+      const [usersResult, rolesResult] = await Promise.allSettled([
+        api.get<{ users: AdminUserResponse[] }>(API_ROUTES.admin.users),
+        api.get<AdminRoleResponse[]>(API_ROUTES.admin.roles),
+      ])
+
+      if (!isMounted) {
+        return
+      }
+
+      if (usersResult.status === "fulfilled") {
+        setUsers((usersResult.value.data?.users ?? []).map(toUserRecord))
+      }
+
+      if (rolesResult.status === "fulfilled") {
+        setRoles((rolesResult.value.data ?? []).map(toRoleOption))
+      }
+
+      setLoading(false)
+    }
+
+    loadUsers()
+
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const filteredUsers = useMemo(() => {
@@ -57,9 +134,10 @@ export function UsersManagement() {
         current.map((user) =>
           user.id === formDialog.user?.id
             ? {
-                ...user,
-                ...value,
-              }
+              ...user,
+              ...value,
+              roleDisplayName: getRoleDisplayName(value.role, roles),
+            }
             : user
         )
       )
@@ -70,7 +148,8 @@ export function UsersManagement() {
     const nextUser: UserRecord = {
       id: `u-${Date.now()}`,
       ...value,
-      createdAt: new Date().toISOString(),
+      roleDisplayName: getRoleDisplayName(value.role, roles),
+      created_at: new Date().toISOString().slice(0, 10),
     }
 
     setUsers((current) => [nextUser, ...current])
@@ -81,9 +160,9 @@ export function UsersManagement() {
       current.map((user) =>
         user.id === userId
           ? {
-              ...user,
-              status: user.status === "active" ? "inactive" : "active",
-            }
+            ...user,
+            status: user.status === "active" ? "inactive" : "active",
+          }
           : user
       )
     )
@@ -109,19 +188,18 @@ export function UsersManagement() {
           onClick={() => setFormDialog({ open: true, mode: "create", user: undefined })}
         >
           <Plus className="size-4" />
-          შექმენით ახალი
+          მომხმარებლის დამატება
         </Button>
       </CardHeader>
 
       <CardContent className="space-y-4">
-        <UsersFilters value={filters} onChange={setFilters} />
+        <UsersFilters value={filters} onChange={setFilters} roles={roles} />
 
         <UsersTable
           users={filteredUsers}
           loading={loading}
           onEdit={(user) => setFormDialog({ open: true, mode: "edit", user })}
           onToggleStatus={handleToggleStatus}
-          onDelete={setUserToDelete}
         />
       </CardContent>
 
@@ -131,6 +209,7 @@ export function UsersManagement() {
         initialUser={formDialog.user}
         onOpenChange={(open) => setFormDialog((current) => ({ ...current, open }))}
         onSubmit={handleCreateOrEdit}
+        roles={roles}
       />
 
       <DeleteUserDialog

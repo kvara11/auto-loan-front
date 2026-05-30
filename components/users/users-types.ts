@@ -1,13 +1,14 @@
 import { type RegisterInput } from "@/lib/validations/auth"
 
-export type UserRole = "admin" | "manager" | "user"
+export type UserRole = string
 export type UserStatus = "active" | "inactive"
 
 export type UserRecord = RegisterInput & {
   id: string
   role: UserRole
+  roleDisplayName?: string
   status: UserStatus
-  createdAt: string
+  created_at: string
 }
 
 export type UserFilters = {
@@ -20,12 +21,6 @@ export type UserFormInput = RegisterInput & {
   role: UserRole
   status: UserStatus
 }
-
-export const roleOptions: Array<{ label: string; value: UserRole }> = [
-  { label: "ადმინი", value: "admin" },
-  { label: "მენეჯერი", value: "manager" },
-  { label: "მომხმარებელი", value: "user" },
-]
 
 export const statusOptions: Array<{ label: string; value: UserStatus }> = [
   { label: "აქტიური", value: "active" },
