@@ -27,7 +27,7 @@ function formatDate(value: string) {
     return "-"
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("ka-GE", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -36,6 +36,10 @@ function formatDate(value: string) {
 
 function formatRole(value: string) {
   return value.replace(/-/g, " ")
+}
+
+function formatStatus(value: string) {
+  return value === "active" ? "აქტიური" : "გაუქმებული"
 }
 
 export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTableProps) {
@@ -77,8 +81,8 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTabl
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.roleDisplayName ?? formatRole(user.role)}</TableCell>
               <TableCell>
-                <Badge variant={user.status === "active" ? "success" : "inactive"} className="capitalize">
-                  {user.status}
+                <Badge variant={user.status === "active" ? "success" : "inactive"}>
+                  {formatStatus(user.status)}
                 </Badge>
               </TableCell>
               <TableCell>{formatDate(user.created_at)}</TableCell>
