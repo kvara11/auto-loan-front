@@ -74,7 +74,7 @@ export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
 
                 <DropdownMenuContent align="end" className="w-52">
                     <DropdownMenuItem className="h-10 text-sm sm:text-base" onSelect={() => router.push("/settings")}>
-                        ინფორმაცია
+                        პარამეტრები
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

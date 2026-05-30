@@ -2,8 +2,9 @@
 
 import { useSyncExternalStore } from "react"
 
-const AUTH_USER_KEY = "auth:user"
-const AUTH_SYNC_KEY = "auth:user:sync"
+const AUTH_USER_KEY = process.env.AUTH_USER_KEY || ""
+const AUTH_SYNC_KEY = process.env.AUTH_SYNC_KEY || ""
+
 let cachedAuthUser: AuthUser | null = null
 let cachedAuthUserRaw = ""
 
