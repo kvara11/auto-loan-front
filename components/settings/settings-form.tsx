@@ -196,7 +196,7 @@ export function SettingsForm() {
                     >
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
-                                <Label htmlFor="first_name">First name</Label>
+                                <Label htmlFor="first_name">სახელი</Label>
                                 <Input
                                     id="first_name"
                                     className="h-10"
@@ -207,7 +207,7 @@ export function SettingsForm() {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="last_name">Last name</Label>
+                                <Label htmlFor="last_name">გვარი</Label>
                                 <Input
                                     id="last_name"
                                     className="h-10"
@@ -219,7 +219,7 @@ export function SettingsForm() {
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="email">იმეილი</Label>
                             <Input id="email" className="h-10" value={settings.email} readOnly disabled />
                             <p className="text-muted-foreground text-xs sm:text-sm">
                                 Email is currently read-only in this UI.
@@ -233,7 +233,7 @@ export function SettingsForm() {
                     description="Control how the interface behaves and what notifications you receive."
                 >
                     <div className="space-y-2">
-                        <Label htmlFor="theme">Theme</Label>
+                        <Label htmlFor="theme">თემა</Label>
                         <Select value={settings.theme} onValueChange={handleThemeChange} disabled={status === "loading"}>
                             <SelectTrigger id="theme" className="h-10">
                                 <SelectValue placeholder="Select theme" />
