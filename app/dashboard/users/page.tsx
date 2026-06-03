@@ -6,10 +6,10 @@ export default function UsersPage() {
     <DashboardShell>
       <section className="space-y-4">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">მომხმარებლის ადმინისტრირება</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
+          <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">მომხმარებლის ადმინისტრირება</h3>
+          {/* <p className="text-muted-foreground text-sm sm:text-base">
             შექმენით, განაახლეთ და აკონტროლეთ მომხმარებლები და წვდომები.
-          </p>
+          </p> */}
         </div>
 
         <UsersManagement />

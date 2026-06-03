@@ -10,6 +10,7 @@ export const API_ROUTES = {
     admin: {
         users: "/api/admin/users",
         roles: "/api/admin/roles",
+        userActivation: (userId: string) => `/api/admin/users/${userId}/activation`,
     },
     settings: {
         index: "/api/settings",

@@ -20,6 +20,7 @@ type UsersTableProps = {
   loading: boolean
   onEdit: (user: UserRecord) => void
   onToggleStatus: (userId: string) => void
+  togglingUserId?: string
 }
 
 function formatDate(value: string) {
@@ -42,7 +43,7 @@ function formatStatus(value: string) {
   return value === "active" ? "აქტიური" : "გაუქმებული"
 }
 
-export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTableProps) {
+export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUserId }: UsersTableProps) {
   if (loading) {
     return (
       <div className="flex min-h-65 items-center justify-center rounded-xl border">
@@ -88,7 +89,14 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTabl
               <TableCell>{formatDate(user.created_at)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" className="bg-yellow-100" size="sm" onClick={() => onEdit(user)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="bg-yellow-100"
+                    size="sm"
+                    onClick={() => onEdit(user)}
+                    disabled={user.status !== "active"}
+                  >
                     <Edit className="size-3.5" />
                   </Button>
                   <Button
@@ -96,7 +104,8 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus }: UsersTabl
                     variant="outline"
                     size="sm"
                     onClick={() => onToggleStatus(user.id)}
-                    aria-label={user.status === "active" ? "Deactivate user" : "Activate user"}
+                    aria-label={user.status === "active" ? "გაუქმება" : "აღდგენა"}
+                    disabled={togglingUserId === user.id}
                     className={`${user.status === "active" ? "bg-red-100" : "bg-green-100"}`}
                   >
                     <Power className='size-3.5 text-back' />

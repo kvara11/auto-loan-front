@@ -30,5 +30,5 @@ export const statusOptions: Array<{ label: string; value: UserStatus }> = [
 export const defaultFilters: UserFilters = {
   search: "",
   role: "all",
-  status: "all",
+  status: "active",
 }
