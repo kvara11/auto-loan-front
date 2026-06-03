@@ -58,6 +58,7 @@ const defaultValues: UserFormInput = {
 }
 
 export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles }: UserFormDialogProps) {
+  const isCreateMode = mode === "create"
 
   const noAutoFillProps = {
     "data-1p-ignore": "true",
@@ -95,9 +96,9 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "Create User" : "Edit User"}</DialogTitle>
+          <DialogTitle>{mode === "create" ? "მომხმარებლის დამატება" : "მომხმარებლის რედაქტირება"}</DialogTitle>
           <DialogDescription>
             {mode === "create"
               ? "Add a new user with registration fields and role settings."
@@ -107,79 +108,83 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <FormField
-                control={form.control}
-                name="first_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>სახელი</FormLabel>
-                    <FormControl>
-                      <Input className="h-10" placeholder="John" {...field} {...noAutoFillProps} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {isCreateMode ? (
+              <>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="first_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>სახელი</FormLabel>
+                        <FormControl>
+                          <Input className="h-10" placeholder="John" {...field} {...noAutoFillProps} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-              <FormField
-                control={form.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>გვარი</FormLabel>
-                    <FormControl>
-                      <Input className="h-10" placeholder="Doe" {...field} {...noAutoFillProps} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                  <FormField
+                    control={form.control}
+                    name="last_name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>გვარი</FormLabel>
+                        <FormControl>
+                          <Input className="h-10" placeholder="Doe" {...field} {...noAutoFillProps} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>მომხმარებლის სახელი</FormLabel>
-                  <FormControl>
-                    <Input className="h-10" placeholder="johndoe" {...field} {...noAutoFillProps} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>მომხმარებლის სახელი</FormLabel>
+                      <FormControl>
+                        <Input className="h-10" placeholder="johndoe" {...field} {...noAutoFillProps} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>იმეილი</FormLabel>
-                  <FormControl>
-                    <Input className="h-10" placeholder="john@example.com" type="email" {...field} {...noAutoFillProps} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>იმეილი</FormLabel>
+                      <FormControl>
+                        <Input className="h-10" placeholder="john@example.com" type="email" {...field} {...noAutoFillProps} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>პაროლი</FormLabel>
-                  <FormControl>
-                    <Input className="h-10" placeholder="••••••••" type="password" {...field} {...noAutoFillProps} autoComplete="new-password" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>პაროლი</FormLabel>
+                      <FormControl>
+                        <Input className="h-10" placeholder="••••••••" type="password" {...field} {...noAutoFillProps} autoComplete="new-password" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            ) : null}
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className={isCreateMode ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : undefined}>
               <FormField
                 control={form.control}
                 name="role"
@@ -205,30 +210,32 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="status"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>სტატუსი</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {statusOptions.map((status) => (
-                          <SelectItem key={status.value} value={status.value}>
-                            {status.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {isCreateMode ? (
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>სტატუსი</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-10">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {statusOptions.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              {status.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
             </div>
 
             <DialogFooter>
