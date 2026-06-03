@@ -99,11 +99,11 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "მომხმარებლის დამატება" : "მომხმარებლის რედაქტირება"}</DialogTitle>
-          <DialogDescription>
+          {/* <DialogDescription>
             {mode === "create"
               ? "Add a new user with registration fields and role settings."
               : "Update user details and account access settings."}
-          </DialogDescription>
+          </DialogDescription> */}
         </DialogHeader>
 
         <Form {...form}>
@@ -194,7 +194,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select role" />
+                          <SelectValue placeholder="აირჩიეთ როლი" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -210,7 +210,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                 )}
               />
 
-              {isCreateMode ? (
+              {/* {isCreateMode ? (
                 <FormField
                   control={form.control}
                   name="status"
@@ -235,14 +235,14 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
                     </FormItem>
                   )}
                 />
-              ) : null}
+              ) : null} */}
             </div>
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
+                გაუქმება
               </Button>
-              <Button type="submit">{mode === "create" ? "Create User" : "Save Changes"}</Button>
+              <Button type="submit">{mode === "create" ? "დამატება" : "შენახვა"}</Button>
             </DialogFooter>
           </form>
         </Form>

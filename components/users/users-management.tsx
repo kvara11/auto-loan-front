@@ -178,9 +178,9 @@ export function UsersManagement() {
       <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-base sm:text-lg">მომხმარებლები</CardTitle>
-          <CardDescription className="text-sm sm:text-base">
+          {/* <CardDescription className="text-sm sm:text-base">
             პლატფორმის მომხმარებლების ანგარიშზე წვდომის, როლებისა და სტატუსის მართვა.
-          </CardDescription>
+          </CardDescription> */}
         </div>
         <Button
           type="button"
