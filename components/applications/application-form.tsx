@@ -367,6 +367,18 @@ export function ApplicationFormPage() {
         legal_address: client.legal_address || current.legal_address,
         birth_date: client.birth_date || current.birth_date,
       }));
+
+      // Clear errors for fields that were populated
+      setErrors((current) => ({
+        ...current,
+        first_name: undefined,
+        last_name: undefined,
+        phone: undefined,
+        email: undefined,
+        address: undefined,
+        legal_address: undefined,
+        birth_date: undefined,
+      }));
       
       if (client.id) {
         setClientId(client.id);
@@ -391,6 +403,7 @@ export function ApplicationFormPage() {
       "first_name",
       "last_name",
       "phone",
+      "birth_date"
     ];
 
     for (const field of required) {
@@ -634,7 +647,7 @@ export function ApplicationFormPage() {
           <CardContent className="pt-6 space-y-6">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="personal_id">პირადი ნომერი</Label>
+                <Label htmlFor="personal_id">პირადი ნომერი *</Label>
                 <div className="flex gap-2">
                   <Input
                     id="personal_id"
@@ -666,7 +679,7 @@ export function ApplicationFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="first_name">სახელი</Label>
+                <Label htmlFor="first_name">სახელი *</Label>
                 <Input
                   id="first_name"
                   value={form.first_name}
@@ -679,7 +692,7 @@ export function ApplicationFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="last_name">გვარი</Label>
+                <Label htmlFor="last_name">გვარი *</Label>
                 <Input
                   id="last_name"
                   value={form.last_name}
@@ -692,7 +705,7 @@ export function ApplicationFormPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="birth_date">დაბადების თარიღი</Label>
+                <Label htmlFor="birth_date">დაბადების თარიღი *</Label>
                 <Input
                   id="birth_date"
                   type="date"
@@ -700,10 +713,13 @@ export function ApplicationFormPage() {
                   onChange={(e) => updateField("birth_date", e.target.value)}
                   className={cn(errors.birth_date && "border-red-500", "block uppercase font-medium")}
                 />
+                {errors.birth_date && (
+                  <p className="text-xs text-red-500">{errors.birth_date}</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">ტელეფონი</Label>
+                <Label htmlFor="phone">ტელეფონი *</Label>
                 <Input
                   id="phone"
                   value={form.phone}
