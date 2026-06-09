@@ -100,15 +100,15 @@ export function ApplicationsManagement() {
   return (
     <Card>
       <CardHeader className="gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-1">
+        {/* <div className="space-y-1">
           <CardTitle className="text-base sm:text-lg">Applications</CardTitle>
           <CardDescription className="text-sm sm:text-base">Minimal overview of loan applications.</CardDescription>
-        </div>
+        </div> */}
 
         <Button asChild type="button" className="h-10">
           <Link href="/dashboard/applications/new">
             <Plus className="size-4" />
-            New Application
+            ახალი განაცხადი
           </Link>
         </Button>
       </CardHeader>

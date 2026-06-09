@@ -6,8 +6,8 @@ export default function ApplicationsPage() {
     <DashboardShell>
       <section className="space-y-4">
         <div className="space-y-1">
-          <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">Applications</h3>
-          <p className="text-muted-foreground text-sm sm:text-base">Loan applications list and quick access to the create flow.</p>
+          <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">განცხადებები</h3>
+          {/* <p className="text-muted-foreground text-sm sm:text-base">Loan applications list and quick access to the create flow.</p> */}
         </div>
 
         <ApplicationsManagement />
