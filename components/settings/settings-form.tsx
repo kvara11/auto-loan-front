@@ -220,7 +220,7 @@ export function SettingsForm() {
 
                         <div className="space-y-2">
                             <Label htmlFor="email">იმეილი</Label>
-                            <Input id="email" className="h-10" value={settings.email} />
+                            <Input id="email" className="h-10" value={settings.email} readOnly/>
                         </div>
                     </SectionCard>
                 </div>
