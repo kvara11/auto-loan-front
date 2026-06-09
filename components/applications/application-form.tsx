@@ -695,9 +695,10 @@ export function ApplicationFormPage() {
                 <Label htmlFor="birth_date">დაბადების თარიღი</Label>
                 <Input
                   id="birth_date"
+                  type="date"
                   value={form.birth_date}
                   onChange={(e) => updateField("birth_date", e.target.value)}
-                  placeholder="დდ/თთ/წწწწ"
+                  className={cn(errors.birth_date && "border-red-500", "block uppercase font-medium")}
                 />
               </div>
 
