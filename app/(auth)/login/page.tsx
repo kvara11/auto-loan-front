@@ -157,9 +157,9 @@ export default function LoginPage() {
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel className="text-sm sm:text-base">დამიმახსოვრე</FormLabel>
-                    <p className="text-muted-foreground text-xs sm:text-sm">
+                    {/* <p className="text-muted-foreground text-xs sm:text-sm">
                       ამ კომპიუტერზე უფრო ხანგრძლივად შეინარჩუნებს შესვლას.
-                    </p>
+                    </p> */}
                   </div>
                 </FormItem>
               )}

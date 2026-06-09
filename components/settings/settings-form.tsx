@@ -159,19 +159,19 @@ export function SettingsForm() {
         <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div className="space-y-1">
-                    <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Settings</h2>
-                    <p className="text-muted-foreground text-sm sm:text-base">
-                        Manage your profile and app preferences from one place.
-                    </p>
+                    <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">პარამეტრები</h2>
+                    {/* <p className="text-muted-foreground text-sm sm:text-base">
+                        მართეთ თქვენი პროფილი და აპლიკაციის პარამეტრები ერთი ადგილიდან.
+                    </p> */}
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Badge variant={isDirty ? "default" : "secondary"} className="h-8 px-3 text-xs sm:text-sm">
-                        {status === "saving" ? "Saving" : isDirty ? "Unsaved changes" : "Up to date"}
+                        {status === "saving" ? "შენახვა" : isDirty ? "შეცვლილია" : "განახლებულია"}
                     </Badge>
                     <Button type="submit" className="h-10" disabled={status === "loading" || status === "saving"}>
                         <Save className="mr-2 size-4" />
-                        Save Changes
+                        შენახვა
                     </Button>
                 </div>
             </div>
@@ -191,8 +191,8 @@ export function SettingsForm() {
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="lg:col-span-2">
                     <SectionCard
-                        title="Profile"
-                        description="Update the name and email details associated with your account."
+                        title="პროფილი"
+                        description="შეცვალეთ თქვენი სახელი და ელ.ფოსტა."
                     >
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
@@ -220,10 +220,7 @@ export function SettingsForm() {
 
                         <div className="space-y-2">
                             <Label htmlFor="email">იმეილი</Label>
-                            <Input id="email" className="h-10" value={settings.email} readOnly disabled />
-                            <p className="text-muted-foreground text-xs sm:text-sm">
-                                Email is currently read-only in this UI.
-                            </p>
+                            <Input id="email" className="h-10" value={settings.email} />
                         </div>
                     </SectionCard>
                 </div>
@@ -283,36 +280,36 @@ export function SettingsForm() {
                 </SectionCard>
 
                 <SectionCard
-                    title="Security"
-                    description="Change your password using the dedicated auth endpoint."
+                    title="უსაფრთხოება"
+                    description="შეცვალეთ თქვენი პაროლი."
                 >
                     <div className="rounded-lg border border-dashed p-4">
-                        <div className="flex items-start gap-3">
+                        <div className="flex gap-3 items-center">
                             <ShieldAlert className="text-muted-foreground mt-0.5 size-4" />
                             <div className="space-y-3">
-                                <div className="space-y-1">
+                                {/* <div className="space-y-1">
                                     <p className="text-sm font-medium sm:text-base">Password changes</p>
                                     <p className="text-muted-foreground text-xs sm:text-sm">
                                         Update your password in a secure popup before saving.
                                     </p>
-                                </div>
+                                </div> */}
 
                                 <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
                                     <Button type="button" className="h-10" onClick={() => setIsPasswordDialogOpen(true)}>
-                                        Change password
+                                        პაროლის შეცვლა
                                     </Button>
 
                                     <DialogContent>
                                         <DialogHeader>
-                                            <DialogTitle>Change password</DialogTitle>
-                                            <DialogDescription>
-                                                Enter the new password twice to confirm the update.
-                                            </DialogDescription>
+                                            <DialogTitle>პაროლის შეცვლა</DialogTitle>
+                                            {/* <DialogDescription>
+                                                შეიყვანეთ ახალი პაროლი ორჯერ, რომ დაადასტუროთ განახლება.
+                                            </DialogDescription> */}
                                         </DialogHeader>
 
                                         <form className="space-y-4" onSubmit={handlePasswordSubmit}>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">Password</Label>
+                                                <Label htmlFor="password">პაროლი</Label>
                                                 <Input
                                                     id="password"
                                                     type="password"
@@ -323,7 +320,7 @@ export function SettingsForm() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="password_verify">Password verify</Label>
+                                                <Label htmlFor="password_verify">გაიმეორეთ პაროლი</Label>
                                                 <Input
                                                     id="password_verify"
                                                     type="password"
@@ -351,10 +348,10 @@ export function SettingsForm() {
                                                     variant="outline"
                                                     onClick={() => setIsPasswordDialogOpen(false)}
                                                 >
-                                                    Cancel
+                                                    გაუქმება
                                                 </Button>
                                                 <Button type="submit" disabled={passwordStatus === "saving"}>
-                                                    {passwordStatus === "saving" ? "Saving..." : "Update"}
+                                                    {passwordStatus === "saving" ? "შენახვა..." : "შენახვა"}
                                                 </Button>
                                             </DialogFooter>
                                         </form>
