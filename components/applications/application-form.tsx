@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, Plus, Trash2, CheckCircle2, AlertCircle, X, UserCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -387,13 +387,33 @@ export function ApplicationFormPage() {
         setClientLookupStatus("new");
       }
     } catch (requestError) {
-      setLookupError(
-        getApiErrorMessage(requestError) || "კლიენტი ვერ მოიძებნა",
-      );
+      // setLookupError(
+      //   getApiErrorMessage(requestError) || "კლიენტი ვერ მოიძებნა",
+      // );
       setClientLookupStatus("new");
     } finally {
       setLookupLoading(false);
     }
+  };
+
+  const handleResetLookup = () => {
+    setForm((current) => ({
+      ...current,
+      first_name: "",
+      last_name: "",
+      birth_date: "",
+      phone: "",
+      email: "",
+      address: "",
+      legal_address: "",
+      marital_status: "",
+      family_members: "",
+      legal_address_verified: false,
+    }));
+    setClientLookupStatus("idle");
+    setClientId(undefined);
+    setErrors({});
+    setLookupError(undefined);
   };
 
   const validateStep1 = () => {
@@ -420,7 +440,27 @@ export function ApplicationFormPage() {
     if (!validateStep1()) return;
 
     if (clientLookupStatus === "existing" && clientId) {
-      setStep(2);
+      setSubmitLoading(true);
+      setSubmitError(undefined);
+      try {
+        await api.put(`/api/clients/${clientId}`, {
+          first_name: form.first_name,
+          last_name: form.last_name,
+          personal_id: form.personal_id,
+          birth_date: form.birth_date,
+          phone: form.phone,
+          email: form.email,
+          address: form.address,
+          legal_address: form.legal_address,
+          marital_status: form.marital_status,
+          family_members: toPayloadNumber(form.family_members),
+        });
+        setStep(2);
+      } catch (err) {
+        setSubmitError(getApiErrorMessage(err) || "ვერ მოხერხდა კლიენტის განახლება");
+      } finally {
+        setSubmitLoading(false);
+      }
       return;
     }
 
@@ -438,6 +478,8 @@ export function ApplicationFormPage() {
         email: form.email,
         address: form.address,
         legal_address: form.legal_address,
+        marital_status: form.marital_status,
+        family_members: toPayloadNumber(form.family_members),
       });
 
       if (!response.success || !response.data?.client?.id) {
@@ -637,12 +679,36 @@ export function ApplicationFormPage() {
             {/* Section 1: Client Data */}
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="border-b bg-slate-50/50 pb-4">
-            <CardTitle className="text-lg font-bold text-slate-800">
-              1. კლიენტის მონაცემები
-            </CardTitle>
-            <CardDescription>
-              შეიყვანეთ ძირითადი ინფორმაცია კლიენტის შესახებ.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-bold text-slate-800">
+                  1. კლიენტის მონაცემები
+                </CardTitle>
+                <CardDescription>
+                  შეიყვანეთ ძირითადი ინფორმაცია კლიენტის შესახებ.
+                </CardDescription>
+              </div>
+              {clientLookupStatus !== "idle" && (
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ring-1 ring-inset",
+                  clientLookupStatus === "existing" 
+                    ? "bg-green-50 text-green-700 ring-green-600/20" 
+                    : "bg-amber-50 text-amber-700 ring-amber-600/20"
+                )}>
+                  {clientLookupStatus === "existing" ? (
+                    <>
+                      <UserCheck className="size-3.5" />
+                      არსებული კლიენტი
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="size-3.5" />
+                      ახალი კლიენტი
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -655,20 +721,33 @@ export function ApplicationFormPage() {
                     onChange={(e) => updateField("personal_id", e.target.value)}
                     placeholder="11 ნიშნა ნომერი"
                     maxLength={11}
-                    className={cn(errors.personal_id && "border-red-500")}
+                    readOnly={clientLookupStatus !== "idle"}
+                    className={cn(errors.personal_id && "border-red-500", clientLookupStatus !== "idle" && "bg-slate-50")}
                   />
-                  <Button
-                    type="button"
-                    size="icon"
-                    onClick={handleLookup}
-                    disabled={lookupLoading}
-                  >
-                    {lookupLoading ? (
-                      <Loading size="sm" />
-                    ) : (
-                      <Search className="size-4" />
-                    )}
-                  </Button>
+                  {clientLookupStatus === "idle" ? (
+                    <Button
+                      type="button"
+                      size="icon"
+                      onClick={handleLookup}
+                      disabled={lookupLoading}
+                    >
+                      {lookupLoading ? (
+                        <Loading size="sm" />
+                      ) : (
+                        <Search className="size-4" />
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={handleResetLookup}
+                      className="border-slate-200 text-slate-500 hover:text-red-500 hover:border-red-200"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  )}
                 </div>
                 {errors.personal_id && (
                   <p className="text-xs text-red-500">{errors.personal_id}</p>
@@ -684,7 +763,8 @@ export function ApplicationFormPage() {
                   id="first_name"
                   value={form.first_name}
                   onChange={(e) => updateField("first_name", e.target.value)}
-                  className={cn(errors.first_name && "border-red-500")}
+                  readOnly={clientLookupStatus === "existing"}
+                  className={cn(errors.first_name && "border-red-500", clientLookupStatus === "existing" && "bg-slate-50")}
                 />
                 {errors.first_name && (
                   <p className="text-xs text-red-500">{errors.first_name}</p>
@@ -697,7 +777,8 @@ export function ApplicationFormPage() {
                   id="last_name"
                   value={form.last_name}
                   onChange={(e) => updateField("last_name", e.target.value)}
-                  className={cn(errors.last_name && "border-red-500")}
+                  readOnly={clientLookupStatus === "existing"}
+                  className={cn(errors.last_name && "border-red-500", clientLookupStatus === "existing" && "bg-slate-50")}
                 />
                 {errors.last_name && (
                   <p className="text-xs text-red-500">{errors.last_name}</p>
@@ -711,7 +792,8 @@ export function ApplicationFormPage() {
                   type="date"
                   value={form.birth_date}
                   onChange={(e) => updateField("birth_date", e.target.value)}
-                  className={cn(errors.birth_date && "border-red-500", "block uppercase font-medium")}
+                  readOnly={clientLookupStatus === "existing"}
+                  className={cn(errors.birth_date && "border-red-500", "block uppercase font-medium", clientLookupStatus === "existing" && "bg-slate-50")}
                 />
                 {errors.birth_date && (
                   <p className="text-xs text-red-500">{errors.birth_date}</p>

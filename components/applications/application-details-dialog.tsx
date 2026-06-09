@@ -18,7 +18,8 @@ type ApplicationDetailsDialogProps = {
 }
 
 function formatDate(value?: string) {
-  if (!value) return "-"
+  if (!value) return "-";
+
   return new Intl.DateTimeFormat("ka-GE", {
     year: "numeric",
     month: "short",
@@ -43,7 +44,7 @@ export function ApplicationDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between pr-6">
             <div>
@@ -61,7 +62,7 @@ export function ApplicationDetailsDialog({
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
-          {/* Risk Warning if LTV is high */}
+          
           {application.ltv_warning && (
             <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 border border-red-100 text-red-900">
               <AlertCircle className="size-5 shrink-0" />
@@ -72,7 +73,7 @@ export function ApplicationDetailsDialog({
           )}
 
           <div className="grid gap-6 md:grid-cols-2">
-            {/* 👤 Client & Officer Information */}
+        
             <section className="space-y-4">
               <div className="flex items-center gap-2 font-semibold text-slate-800">
                 <Users className="size-4" />
@@ -98,7 +99,7 @@ export function ApplicationDetailsDialog({
               </div>
             </section>
 
-            {/* 💰 Loan Details */}
+
             <section className="space-y-4">
               <div className="flex items-center gap-2 font-semibold text-slate-800">
                 <Coins className="size-4" />
@@ -141,8 +142,8 @@ export function ApplicationDetailsDialog({
                 )}
               </div>
             </section>
+            
 
-            {/* 🚗 Vehicle Information */}
             <section className="space-y-4">
               <div className="flex items-center gap-2 font-semibold text-slate-800">
                 <Car className="size-4" />
@@ -189,8 +190,8 @@ export function ApplicationDetailsDialog({
                 )}
               </div>
             </section>
+            
 
-            {/* 📊 Valuation & Risk Metrics */}
             <section className="space-y-4">
               <div className="flex items-center gap-2 font-semibold text-slate-800">
                 <ClipboardList className="size-4" />
@@ -230,7 +231,7 @@ export function ApplicationDetailsDialog({
               </div>
             </section>
 
-            {/* 👥 Co-borrower / Guarantor */}
+
             {application.has_coborrower_guarantor === "1" || application.has_coborrower_guarantor === 1 || application.co_borrower_name || application.guarantor_name ? (
               <section className="space-y-4 md:col-span-2">
                 <div className="flex items-center gap-2 font-semibold text-slate-800">
@@ -256,18 +257,22 @@ export function ApplicationDetailsDialog({
               </section>
             ) : null}
 
-            {/* ⏱ Timestamps */}
-            <section className="space-y-4 md:col-span-2 pt-4 border-t">
+
+            <section className="space-y-4">
               <div className="flex items-center gap-2 font-semibold text-slate-800">
                 <Calendar className="size-4" />
                 <h3>ისტორია</h3>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-xs text-muted-foreground">
-                  შექმნილია: <span className="font-medium text-slate-700">{formatDate(application.created_at)}</span>
-                </div>
-                <div className="text-xs text-muted-foreground text-right">
-                  განახლებულია: <span className="font-medium text-slate-700">{formatDate(application.updated_at)}</span>
+              <div className="grid gap-4 p-4 rounded-xl border bg-slate-50/50">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">შექმნილია</span>
+                    <p className="text-sm font-medium">{formatDate(application.created_at)}</p>
+                  </div>
+                  <div className="grid gap-1">
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">განახლებულია</span>
+                    <p className="text-sm font-medium">{formatDate(application.updated_at)}</p>
+                  </div>
                 </div>
               </div>
             </section>
