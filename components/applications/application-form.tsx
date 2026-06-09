@@ -91,12 +91,12 @@ type ApplicationForm = {
   guarantor_personal_id: string;
 
   // 5. Vehicle Details
-  car_make: string;
-  car_model: string;
+  car_make_id: number;
+  car_model_id: number;
   car_year: string;
   engine: string;
-  fuel_type: string;
-  transmission: string;
+  fuel_type_id: number;
+  transmission_id: number;
   mileage_km: string;
   vin: string;
   plate_number: string;
@@ -160,12 +160,12 @@ const defaultForm: ApplicationForm = {
   guarantor_name: "",
   guarantor_personal_id: "",
 
-  car_make: "",
-  car_model: "",
+  car_make_id: 0,
+  car_model_id: 0,
   car_year: "",
   engine: "",
-  fuel_type: "",
-  transmission: "",
+  fuel_type_id: 0,
+  transmission_id: 0,
   mileage_km: "",
   vin: "",
   plate_number: "",
@@ -359,13 +359,13 @@ export function ApplicationFormPage() {
 
       setForm((current) => ({
         ...current,
-        first_name: current.first_name || client.first_name || "",
-        last_name: current.last_name || client.last_name || "",
-        phone: current.phone || client.phone || "",
-        email: current.email || client.email || "",
-        address: current.address || client.address || "",
-        legal_address: current.legal_address || client.legal_address || "",
-        birth_date: current.birth_date || client.birth_date || "",
+        first_name: client.first_name || current.first_name,
+        last_name: client.last_name || current.last_name,
+        phone: client.phone || current.phone,
+        email: client.email || current.email,
+        address: client.address || current.address,
+        legal_address: client.legal_address || current.legal_address,
+        birth_date: client.birth_date || current.birth_date,
       }));
       
       if (client.id) {
@@ -448,8 +448,8 @@ export function ApplicationFormPage() {
       "loan_term_months",
       "annual_interest_rate",
       "payment_day",
-      "car_make",
-      "car_model",
+      "car_make_id",
+      "car_model_id",
       "car_year",
       "market_value",
     ];
@@ -480,8 +480,8 @@ export function ApplicationFormPage() {
       "loan_term_months",
       "annual_interest_rate",
       "payment_day",
-      "car_make",
-      "car_model",
+      "car_make_id",
+      "car_model_id",
       "car_year",
       "market_value",
     ];
@@ -1388,31 +1388,24 @@ export function ApplicationFormPage() {
           <CardContent className="pt-6 space-y-8">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="car_make">მარკა</Label>
+                <Label htmlFor="car_make_id">მარკა</Label>
                 <Input
-                  id="car_make"
-                  value={form.car_make}
-                  onChange={(e) => updateField("car_make", e.target.value)}
-                  onBlur={(e) =>
-                    updateField("car_make", titleCase(translit(e.target.value)))
-                  }
-                  className={cn(errors.car_make && "border-red-500")}
+                  id="car_make_id"
+                  type="number"
+                  value={form.car_make_id}
+                  onChange={(e) => updateField("car_make_id", Number(e.target.value))}
+                  className={cn(errors.car_make_id && "border-red-500")}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="car_model">მოდელი</Label>
+                <Label htmlFor="car_model_id">მოდელი</Label>
                 <Input
-                  id="car_model"
-                  value={form.car_model}
-                  onChange={(e) => updateField("car_model", e.target.value)}
-                  onBlur={(e) =>
-                    updateField(
-                      "car_model",
-                      titleCase(translit(e.target.value)),
-                    )
-                  }
-                  className={cn(errors.car_model && "border-red-500")}
+                  id="car_model_id"
+                  type="number"
+                  value={form.car_model_id}
+                  onChange={(e) => updateField("car_model_id", Number(e.target.value))}
+                  className={cn(errors.car_model_id && "border-red-500")}
                 />
               </div>
 
@@ -1439,18 +1432,18 @@ export function ApplicationFormPage() {
               <div className="space-y-2">
                 <Label>საწვავის ტიპი</Label>
                 <Select
-                  value={form.fuel_type}
-                  onValueChange={(v) => updateField("fuel_type", v)}
+                  value={form.fuel_type_id.toString()}
+                  onValueChange={(v) => updateField("fuel_type_id", Number(v))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="აირჩიეთ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="petrol">ბენზინი</SelectItem>
-                    <SelectItem value="diesel">დიზელი</SelectItem>
-                    <SelectItem value="hybrid">ჰიბრიდი</SelectItem>
-                    <SelectItem value="electric">ელექტრო</SelectItem>
-                    <SelectItem value="gas">გაზი</SelectItem>
+                    <SelectItem value="1">ბენზინი</SelectItem>
+                    <SelectItem value="2">დიზელი</SelectItem>
+                    <SelectItem value="3">ჰიბრიდი</SelectItem>
+                    <SelectItem value="4">ელექტრო</SelectItem>
+                    <SelectItem value="5">გაზი</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1458,16 +1451,16 @@ export function ApplicationFormPage() {
               <div className="space-y-2">
                 <Label>გადაცემათა კოლოფი</Label>
                 <Select
-                  value={form.transmission}
-                  onValueChange={(v) => updateField("transmission", v)}
+                  value={form.transmission_id.toString()}
+                  onValueChange={(v) => updateField("transmission_id", Number(v))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="აირჩიეთ" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="automatic">ავტომატიკა</SelectItem>
-                    <SelectItem value="manual">მექანიკური</SelectItem>
-                    <SelectItem value="tiptronic">ტიპტრონიკი</SelectItem>
+                    <SelectItem value="1">ავტომატიკა</SelectItem>
+                    <SelectItem value="2">მექანიკური</SelectItem>
+                    <SelectItem value="3">ტიპტრონიკი</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
