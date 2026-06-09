@@ -3,19 +3,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const summaryCards = [
     {
-        title: "Active Loans",
+        title: "მიმდინარე სესხები",
         value: "128",
-        description: "Currently running customer loans",
+        description: "მიმდინარე სესხები",
     },
     {
-        title: "Pending Applications",
+        title: "დამუშავების პროცესში",
         value: "24",
-        description: "Waiting for final review",
+        description: "დამუშავების პროცესში",
     },
     {
-        title: "Monthly Revenue",
+        title: "თვის შემოსავალი",
         value: "$42,400",
-        description: "Processed this month",
+        description: "თვის შემოსავალი",
     },
 ]
 
@@ -27,7 +27,7 @@ export default function DashboardPage() {
                     <Card key={card.title}>
                         <CardHeader>
                             <CardTitle className="text-sm sm:text-base lg:text-lg">{card.title}</CardTitle>
-                            <CardDescription className="text-sm sm:text-base">{card.description}</CardDescription>
+                            {/* <CardDescription className="text-sm sm:text-base">{card.description}</CardDescription> */}
                         </CardHeader>
                         <CardContent>
                             <p className="text-xl font-semibold tracking-tight sm:text-2xl">{card.value}</p>
@@ -39,23 +39,23 @@ export default function DashboardPage() {
             <section className="mt-4 grid gap-4 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm sm:text-base lg:text-lg">Recent Activity</CardTitle>
-                        <CardDescription className="text-sm sm:text-base">
-                            Latest updates from your operations.
-                        </CardDescription>
+                        <CardTitle className="text-sm sm:text-base lg:text-lg">ბოლო ოპერაციები</CardTitle>
+                        {/* <CardDescription className="text-sm sm:text-base">
+                            ბოლო ოპერაციები.
+                        </CardDescription> */}
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground text-sm sm:text-base">No recent activity yet.</p>
+                        <p className="text-muted-foreground text-sm sm:text-base">ვერ მოიძებნა.</p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-sm sm:text-base lg:text-lg">Team Notes</CardTitle>
-                        <CardDescription className="text-sm sm:text-base">Shared reminders for your team.</CardDescription>
+                        <CardTitle className="text-sm sm:text-base lg:text-lg">გუნდის შენიშვნები</CardTitle>
+                        {/* <CardDescription className="text-sm sm:text-base">გუნდის შენიშვნები.</CardDescription> */}
                     </CardHeader>
                     <CardContent>
-                        <p className="text-muted-foreground text-sm sm:text-base">Nothing to review right now.</p>
+                        <p className="text-muted-foreground text-sm sm:text-base">ვერ მოიძებნა.</p>
                     </CardContent>
                 </Card>
             </section>
