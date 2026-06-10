@@ -112,6 +112,29 @@ type ApplicationForm = {
   officer_comment: string;
 };
 
+type VehicleMake = {
+  id: number;
+  title: string;
+};
+
+type VehicleModel = {
+  id: number;
+  title: string;
+  make_id: number;
+};
+
+type VehicleOption = {
+  id: number;
+  title: string;
+};
+
+type VehicleOptions = {
+  makes: VehicleMake[];
+  models: VehicleModel[];
+  fuels: VehicleOption[];
+  transmissions: VehicleOption[];
+};
+
 const defaultForm: ApplicationForm = {
   personal_id: "",
   first_name: "",
@@ -253,6 +276,41 @@ export function ApplicationFormPage() {
   const [step, setStep] = useState(1);
   const [clientLookupStatus, setClientLookupStatus] = useState<"idle" | "existing" | "new">("idle");
   const [clientId, setClientId] = useState<string | number | undefined>();
+  const [initialClientSnapshot, setInitialClientSnapshot] = useState<Partial<ApplicationForm> | null>(null);
+  const [vehicleOptions, setVehicleOptions] = useState<VehicleOptions>({
+    makes: [],
+    models: [],
+    fuels: [],
+    transmissions: [],
+  });
+  const [optionsLoading, setOptionsLoading] = useState(false);
+
+  useEffect(() => {
+
+    const fetchOptions = async () => {
+      setOptionsLoading(true);
+      try {
+        const response = await api.get<VehicleOptions>("/api/stats/vehicle-options");
+
+        console.log(response);
+        
+        if (response.success && response.data) {
+          setVehicleOptions(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch vehicle options:", error);
+      } finally {
+        setOptionsLoading(false);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
+  const filteredModels = useMemo(() => {
+    if (!form.car_make_id) return [];
+    return vehicleOptions.models.filter((m) => m.make_id === form.car_make_id);
+  }, [form.car_make_id, vehicleOptions.models]);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -366,7 +424,22 @@ export function ApplicationFormPage() {
         address: client.address || current.address,
         legal_address: client.legal_address || current.legal_address,
         birth_date: client.birth_date || current.birth_date,
+        marital_status: client.marital_status || current.marital_status,
+        family_members: client.family_members?.toString() || current.family_members,
       }));
+
+      setInitialClientSnapshot({
+        first_name: client.first_name || "",
+        last_name: client.last_name || "",
+        phone: client.phone || "",
+        email: client.email || "",
+        address: client.address || "",
+        legal_address: client.legal_address || "",
+        birth_date: client.birth_date || "",
+        marital_status: client.marital_status || "",
+        family_members: client.family_members?.toString() || "",
+        personal_id: form.personal_id,
+      });
 
       // Clear errors for fields that were populated
       setErrors((current) => ({
@@ -412,6 +485,7 @@ export function ApplicationFormPage() {
     }));
     setClientLookupStatus("idle");
     setClientId(undefined);
+    setInitialClientSnapshot(null);
     setErrors({});
     setLookupError(undefined);
   };
@@ -440,6 +514,24 @@ export function ApplicationFormPage() {
     if (!validateStep1()) return;
 
     if (clientLookupStatus === "existing" && clientId) {
+      const hasChanged = 
+        !initialClientSnapshot ||
+        form.first_name !== initialClientSnapshot.first_name ||
+        form.last_name !== initialClientSnapshot.last_name ||
+        form.personal_id !== initialClientSnapshot.personal_id ||
+        form.birth_date !== initialClientSnapshot.birth_date ||
+        form.phone !== initialClientSnapshot.phone ||
+        form.email !== initialClientSnapshot.email ||
+        form.address !== initialClientSnapshot.address ||
+        form.legal_address !== initialClientSnapshot.legal_address ||
+        form.marital_status !== initialClientSnapshot.marital_status ||
+        toPayloadNumber(form.family_members) !== toPayloadNumber(initialClientSnapshot.family_members);
+
+      if (!hasChanged) {
+        setStep(2);
+        return;
+      }
+
       setSubmitLoading(true);
       setSubmitError(undefined);
       try {
@@ -515,6 +607,8 @@ export function ApplicationFormPage() {
         nextErrors[field] = "აუცილებელი ველი";
       } else if (value === undefined || value === null) {
         nextErrors[field] = "აუცილებელი ველი";
+      } else if ((field === "car_make_id" || field === "car_model_id") && value === 0) {
+        nextErrors[field] = "აუცილებელი ველი";
       }
     }
 
@@ -546,6 +640,8 @@ export function ApplicationFormPage() {
       if (typeof value === "string" && !value.trim()) {
         nextErrors[field] = "აუცილებელი ველი";
       } else if (value === undefined || value === null) {
+        nextErrors[field] = "აუცილებელი ველი";
+      } else if ((field === "car_make_id" || field === "car_model_id") && value === 0) {
         nextErrors[field] = "აუცილებელი ველი";
       }
     }
@@ -1487,24 +1583,47 @@ export function ApplicationFormPage() {
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <Label htmlFor="car_make_id">მარკა</Label>
-                <Input
-                  id="car_make_id"
-                  type="number"
-                  value={form.car_make_id}
-                  onChange={(e) => updateField("car_make_id", Number(e.target.value))}
-                  className={cn(errors.car_make_id && "border-red-500")}
-                />
+                <Select
+                  value={form.car_make_id ? form.car_make_id.toString() : ""}
+                  onValueChange={(v) => {
+                    updateField("car_make_id", Number(v));
+                    updateField("car_model_id", 0); // Reset model when make changes
+                  }}
+                  disabled={optionsLoading}
+                >
+                  <SelectTrigger className={cn(errors.car_make_id && "border-red-500")}>
+                    <SelectValue placeholder={optionsLoading ? "იტვირთება..." : "აირჩიეთ მარკა"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {vehicleOptions.makes.map((make) => (
+                      <SelectItem key={make.id} value={make.id.toString()}>
+                        {make.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.car_make_id && <p className="text-xs text-red-500">{errors.car_make_id}</p>}
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="car_model_id">მოდელი</Label>
-                <Input
-                  id="car_model_id"
-                  type="number"
-                  value={form.car_model_id}
-                  onChange={(e) => updateField("car_model_id", Number(e.target.value))}
-                  className={cn(errors.car_model_id && "border-red-500")}
-                />
+                <Select
+                  value={form.car_model_id ? form.car_model_id.toString() : ""}
+                  onValueChange={(v) => updateField("car_model_id", Number(v))}
+                  disabled={optionsLoading || !form.car_make_id}
+                >
+                  <SelectTrigger className={cn(errors.car_model_id && "border-red-500")}>
+                    <SelectValue placeholder={!form.car_make_id ? "ჯერ აირჩიეთ მარკა" : "აირჩიეთ მოდელი"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredModels.map((model) => (
+                      <SelectItem key={model.id} value={model.id.toString()}>
+                        {model.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.car_model_id && <p className="text-xs text-red-500">{errors.car_model_id}</p>}
               </div>
 
               <div className="space-y-2">
@@ -1530,18 +1649,19 @@ export function ApplicationFormPage() {
               <div className="space-y-2">
                 <Label>საწვავის ტიპი</Label>
                 <Select
-                  value={form.fuel_type_id.toString()}
+                  value={form.fuel_type_id ? form.fuel_type_id.toString() : ""}
                   onValueChange={(v) => updateField("fuel_type_id", Number(v))}
+                  disabled={optionsLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="აირჩიეთ" />
+                    <SelectValue placeholder={optionsLoading ? "იტვირთება..." : "აირჩიეთ"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">ბენზინი</SelectItem>
-                    <SelectItem value="2">დიზელი</SelectItem>
-                    <SelectItem value="3">ჰიბრიდი</SelectItem>
-                    <SelectItem value="4">ელექტრო</SelectItem>
-                    <SelectItem value="5">გაზი</SelectItem>
+                    {vehicleOptions.fuels.map((fuel) => (
+                      <SelectItem key={fuel.id} value={fuel.id.toString()}>
+                        {fuel.title}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -1549,16 +1669,19 @@ export function ApplicationFormPage() {
               <div className="space-y-2">
                 <Label>გადაცემათა კოლოფი</Label>
                 <Select
-                  value={form.transmission_id.toString()}
+                  value={form.transmission_id ? form.transmission_id.toString() : ""}
                   onValueChange={(v) => updateField("transmission_id", Number(v))}
+                  disabled={optionsLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="აირჩიეთ" />
+                    <SelectValue placeholder={optionsLoading ? "იტვირთება..." : "აირჩიეთ"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">ავტომატიკა</SelectItem>
-                    <SelectItem value="2">მექანიკური</SelectItem>
-                    <SelectItem value="3">ტიპტრონიკი</SelectItem>
+                    {vehicleOptions.transmissions.map((t) => (
+                      <SelectItem key={t.id} value={t.id.toString()}>
+                        {t.title}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

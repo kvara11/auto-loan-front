@@ -20,11 +20,15 @@ export type ApplicationRecord = {
   down_payment: string | number
   officer_comment: string | null
   car_make_id: number
+  car_make: string | null
   car_model_id: number
+  car_model: string | null
   car_year: number
   engine: string | null
   fuel_type_id: number
+  fuel_type: string | null
   transmission_id: number
+  transmission: string | null
   mileage_km: number
   vin: string | null
   plate_number: string | null
