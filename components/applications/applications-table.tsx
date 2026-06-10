@@ -100,7 +100,7 @@ export function ApplicationsTable({
               </TableCell>
               <TableCell className="hidden lg:table-cell text-slate-600">
                 <div className="flex flex-col">
-                  <span className="text-sm">{app.car_make_id} / {app.car_model_id}</span>
+                  <span className="text-sm">{app.car_make} / {app.car_model}</span>
                   <span className="text-xs text-slate-400">{app.car_year} წ.</span>
                 </div>
               </TableCell>
