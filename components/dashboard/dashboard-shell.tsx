@@ -80,7 +80,7 @@ export function DashboardShell({ title, breadcrumb, children }: DashboardShellPr
                     <div className="flex min-h-screen min-w-0 flex-1 flex-col">
                         <DashboardHeader title={title} breadcrumb={breadcrumb} onOpenMobileMenu={() => setMobileOpen(true)} />
                         <main className="flex-1 p-4 sm:p-6 lg:p-7">
-                            <div className="mx-auto w-full max-w-[90rem]">{children}</div>
+                            <div className="mx-auto w-full">{children}</div>
                         </main>
                     </div>
                 </div>

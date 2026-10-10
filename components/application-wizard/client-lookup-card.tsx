@@ -7,6 +7,7 @@ import { WizardSection } from "@/components/application-wizard/wizard-section"
 import { type WizardState } from "@/components/application-wizard/use-application-wizard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn, PERSONAL_ID_WIDTH } from "@/lib/utils"
 
 // "კლიენტის მოძიება": typing the 11th digit (or the search button) looks the client up.
 export function ClientLookupCard({ wizard }: { wizard: WizardState }) {
@@ -20,7 +21,7 @@ export function ClientLookupCard({ wizard }: { wizard: WizardState }) {
         <div className="flex gap-2">
           <Input
             id="personal_id"
-            className="h-10 tabular-nums"
+            className={cn("h-10 tabular-nums", PERSONAL_ID_WIDTH)}
             value={form.personal_id}
             onChange={(event) => set("personal_id", event.target.value.replace(/\D/g, ""))}
             placeholder="11 ნიშნა ნომერი"

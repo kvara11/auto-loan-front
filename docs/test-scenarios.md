@@ -168,9 +168,12 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 6. **Missing number.** A row with `application_no: null` shows the `id` instead.
 7. **Status badges.** Each status shows the Georgian short label in its status color with a dot (`StatusBadge`); an unknown string shows raw in the draft style.
 8. **LTV warning.** A row with `ltv_warning` set shows the LTV in red with a pulsing dot whose tooltip holds the warning.
-9. **Responsive columns.** Secondary columns hide at the `md`, `lg` and `xl` breakpoints.
+9. **Responsive columns.** Secondary columns hide at the `md` and `lg` breakpoints.
 10. **Bad dates.** An unparseable date shows "—" (shared `formatDate`).
 10h. **Filters.** "სტატუსი" (ყველა სტატუსი + the five statuses) and "შექმნის თარიღი — დან / მდე" reload the list from the backend (`GET /api/applications?status=&start_date=&end_date=`, dates inclusive). The "to" date can't be set before the "from" date (`min`/`max`); the backend also rejects it with 424. "გასუფთავება" is disabled until a filter is set and resets all three. No match → "განაცხადები ვერ მოიძებნა". The date format follows the browser's locale.
+10i. **Personal ID search.** Typing in "პირადი ნომერი" reloads the list 350 ms after the last keystroke with `search=` (part of the client's personal ID, trimmed); it combines with the other filters and resets to page 1. "გასუფთავება" also empties the search box. `%` or `_` match literally (nothing, not everything).
+10j. **Pagination.** The list asks for `page=1&per_page=20`; below the table "ნაჩვენებია 1–20 / N", a page-size select (10 / 20 / 50) and ‹ / › buttons with "გვერდი / სულ". Previous is disabled on page 1, next on the last page; both are disabled while loading. Changing a filter or the page size returns to page 1. If the current page no longer exists after a reload, the last page loads. No results → no pagination bar.
+10k. **Layout.** Filters in two rows: search (max 24 rem, like every personal-ID input) + "ახალი განაცხადი" on the right (first on mobile); status, date from/to (narrow) and "გასუფთავება" below. The creation date is its own narrow column right of the status (from `xl`); the officer line uses the short name. At 1440 the table fits without clipping the "ოპერირება" column; long officer/branch lines wrap. ⚠ At 375 the table still clips the columns after "კლიენტი" (the container hides overflow); a card layout for mobile is not done yet.
 10g. **Eye button.** Links to `/dashboard/applications/:id` (middle-click opens a new tab).
 
 ### Who sees what (data scope, enforced by the backend)

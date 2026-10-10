@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table"
 import { type ApplicationRecord } from "@/components/applications/applications-types"
 import { StatusBadge } from "@/components/applications/status-badge"
+import { shortName } from "@/lib/applications"
 import { formatDate, formatMoney } from "@/lib/format"
 
 type ApplicationsTableProps = {
@@ -54,7 +55,7 @@ export function ApplicationsTable({
             <TableHead className="hidden lg:table-cell">ავტომობილი</TableHead>
             <TableHead>LTV</TableHead>
             <TableHead>სტატუსი</TableHead>
-            <TableHead className="hidden xl:table-cell">თარიღი</TableHead>
+            <TableHead className="hidden w-px px-2 xl:table-cell">თარიღი</TableHead>
             <TableHead className="text-right">ოპერირება</TableHead>
           </TableRow>
         </TableHeader>
@@ -65,12 +66,13 @@ export function ApplicationsTable({
                 {app.application_no || app.id}
               </TableCell>
               <TableCell>
-                <div className="flex flex-col">
+                {/* Long officer / branch lines wrap instead of widening the table. */}
+                <div className="flex flex-col xl:max-w-60 xl:whitespace-normal">
                   <span className="font-medium">
                     {app.client.first_name} {app.client.last_name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    ოფიცერი: {app.officer.first_name} {app.officer.last_name}
+                    ოფიცერი: {shortName(app.officer)}
                     {app.branch ? ` · ${app.branch.name}` : ""}
                   </span>
                 </div>
@@ -103,7 +105,7 @@ export function ApplicationsTable({
               <TableCell>
                 <StatusBadge status={app.status} short />
               </TableCell>
-              <TableCell className="hidden text-[13px] text-muted-foreground tabular-nums xl:table-cell">
+              <TableCell className="hidden px-2 text-xs text-muted-foreground tabular-nums xl:table-cell">
                 {formatDate(app.created_at)}
               </TableCell>
               <TableCell className="text-right">

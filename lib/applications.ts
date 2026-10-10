@@ -8,21 +8,37 @@ import { api } from "@/lib/axios"
 
 export const APPLICATIONS_URL = "/api/applications"
 
-// List filters; "" means no filter. Dates are "YYYY-MM-DD", inclusive, on created_at.
-export type ApplicationFilters = { status: string; start_date: string; end_date: string }
+// List filters; "" means no filter. Dates are "YYYY-MM-DD", inclusive, on created_at; search is part of the client's personal ID.
+export type ApplicationFilters = { status: string; start_date: string; end_date: string; search: string }
 
-export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "" }
+export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "", search: "" }
+
+export type PageMeta = { current_page: number; per_page: number; total: number; last_page: number }
+
+export const PAGE_SIZE_OPTIONS = [10, 20, 50]
+
+const filterParams = (filters: ApplicationFilters) =>
+  Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ""))
+
+async function getList(params: Record<string, string | number>) {
+  const response = await api.get<ApplicationRecord[] | { applications?: ApplicationRecord[] }>(APPLICATIONS_URL, { params })
+  if (!response.success) throw new Error(response.message || "განაცხადების ჩატვირთვა ვერ მოხერხდა")
+
+  return { applications: Array.isArray(response.data) ? response.data : (response.data?.applications ?? []), meta: response.meta }
+}
 
 // The backend already limits the list to the user's data scope (own / branch / submitted / all)
-// and applies the filters (GET /api/applications?status=&start_date=&end_date=).
+// and applies the filters. Without page/per_page it returns the whole scope (dashboard counts).
 export async function fetchApplications(filters: ApplicationFilters = EMPTY_APPLICATION_FILTERS): Promise<ApplicationRecord[]> {
-  const params = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ""))
-  const response = await api.get<ApplicationRecord[] | { applications?: ApplicationRecord[] }>(APPLICATIONS_URL, { params })
+  return (await getList(filterParams(filters))).applications
+}
 
-  if (!response.success) throw new Error(response.message || "განაცხადების ჩატვირთვა ვერ მოხერხდა")
-  if (Array.isArray(response.data)) return response.data
+// One page of the list (GET /api/applications?page=&per_page=) with meta {current_page, per_page, total, last_page}.
+export async function fetchApplicationsPage(filters: ApplicationFilters, page: number, perPage: number) {
+  const { applications, meta } = await getList({ ...filterParams(filters), page, per_page: perPage })
+  const fallback: PageMeta = { current_page: page, per_page: perPage, total: applications.length, last_page: 1 }
 
-  return response.data?.applications ?? []
+  return { applications, meta: (meta as PageMeta | undefined) ?? fallback }
 }
 
 // Throws on an error envelope; callers show getApiErrorMessage(err).
