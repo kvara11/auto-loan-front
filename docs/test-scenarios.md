@@ -187,6 +187,15 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 15a. **Back button.** The "← უკან" button at the right end of the header (after the action buttons) returns to the previous page (list or dashboard); a page opened directly (new tab, pasted URL) goes to `/dashboard/applications`.
 16. **Layout.** 1440: two columns (2fr/1fr); 375: one column, buttons wrap, no sideways scroll; both themes readable.
 
+### Attachments (T-406)
+
+16a. **Who uploads.** The officer on their own Draft/Returned application and a risk manager on a submitted one see the upload bar ("ფაილის ტიპი" + "ფაილის ატვირთვა"); the auditor, the branch manager and everyone after a decision see only the list.
+16b. **Upload.** One or more JPG/PNG/WEBP/HEIC/PDF files → the button shows `1/2 · 45%`, then the list and the history ("ფაილი დაემატა" + file name) update. Photos get a thumbnail, other files an icon.
+16c. **Rejected files.** Over 20 MB → message before sending; a wrong type or a server rejection → "„name“: <Georgian backend message>" in the card; the 31st file → "მაქსიმუმ 30 ფაილი".
+16d. **Open / download.** Clicking the name or thumbnail opens it in a new tab (inline); the download button downloads with the original name. Works only when the app is opened on `127.0.0.1` (cookie).
+16e. **Delete.** Only on files you uploaded while you can still upload; confirmation dialog; the file disappears from the list, the history shows "ფაილი წაიშალა", the file stays on the server.
+16f. **After submit.** The officer's upload bar and delete buttons disappear once the application is sent to risks.
+
 ### Workflow actions (buttons come from `data.actions`)
 
 17. **Officer, own Draft or Returned.** "რედაქტირება" and "რისკებში გაგზავნა". Submitting an incomplete draft → the dialog shows the backend's 424 message (the missing fields). Confirm → "განაცხადი გაიგზავნა რისკებში." banner, badge "გაგზავნილია რისკებში", the button disappears, history gains "გაგზავნილია რისკებში".

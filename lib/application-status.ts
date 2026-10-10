@@ -30,6 +30,8 @@ export function getStatusInfo(status: string | null | undefined): StatusInfo {
 const HISTORY_LABELS: Record<string, string> = {
   created: "შექმნილია — მონახაზი",
   updated: "რედაქტირებულია",
+  attachment_added: "ფაილი დაემატა",
+  attachment_removed: "ფაილი წაიშალა",
   submit: "გაგზავნილია რისკებში",
   return: "დაბრუნებულია ოფიცერთან",
   approve: "დამტკიცებულია",
