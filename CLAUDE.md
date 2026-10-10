@@ -56,11 +56,15 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Settings and preferences
 
-- `/api/settings` stores only preferences: theme, notifications and sidebar_collapsed (`lib/settings.ts`, `hooks/use-settings.ts`). `normalizeSettings` accepts either a flat object or a `{ settings }` wrapper, and turns `0/1/"true"/"1"` into booleans. Names are profile data: the form shows them from the auth user and, when they change, `saveProfile()` calls `PUT /api/auth/me` and caches the returned user. Email is read-only. Don't send names through `/api/settings` again: empty strings used to arrive as `null` and broke the save.
-- After a save, `settings-form.tsx` also writes the theme and sidebar values to `localStorage` (`lib/ui-preferences.ts`). The rest of the app reads only `localStorage`.
+- The settings page (`components/settings/settings-page.tsx`) loads `GET /api/settings` once (`{ profile, preferences }`, see `lib/settings.ts`) and renders three independent sections, each in `SettingsSection` (a `Card` with title, description and a footer button):
+  - **პირადი ინფორმაცია** (`profile-section.tsx`): react-hook-form + zod; only first/last name are editable, username and email are read-only. Its own "შენახვა" is disabled until `formState.isDirty`; it calls `PUT /api/settings/profile`, resets the form to the saved values and updates the cached auth user's names.
+  - **ინტერფეისის პარამეტრები** (`preferences-section.tsx`): theme, notifications, compact sidebar; its own "შენახვა", disabled until something differs from the last saved values. `PUT /api/settings/preferences` with `{ preferences }`; theme and sidebar are applied only after the save.
+  - **უსაფრთხოება** (`security-section.tsx`): the change-password dialog (its own `<form>`).
+- Preferences arrive typed (`theme`, booleans) with defaults, so the frontend doesn't normalize them. Never send profile fields to the preferences endpoint: the backend rejects unknown keys with 424.
+- After a preferences save, the theme and sidebar values are also written to `localStorage` (`lib/ui-preferences.ts`). The rest of the app reads only `localStorage`.
   - `ThemeSync` in the root layout reads the theme and toggles the `dark` class on `<html>` in an effect. There is no script that runs before first paint, so dark-mode users see a light flash on load.
   - The shell reads the sidebar value through its own copy of `getStoredSidebarCollapsed` in `dashboard-shell-state.tsx`.
-- The change-password dialog posts `{ current_password, password, password_confirmation }` to `/api/auth/change-password`. On success the backend signs out every other session of the user. The dialog's `<form>` is portaled, but in the React tree it sits inside the settings `<form>`, so its submit handler calls `stopPropagation()`; keep that if you move it.
+- The change-password dialog posts `{ current_password, password, password_confirmation }` to `/api/auth/change-password`. On success the backend signs out every other session of the user, and the section shows the success message.
 
 ### Users admin (`components/users/`)
 
@@ -110,12 +114,12 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - **Patterns to copy:**
   - Page header: `div.space-y-1` + `h3.text-xl font-semibold tracking-tight sm:text-2xl`. With an action button, wrap both in `flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`.
   - Field: `div.space-y-2` with a `Label` and an `Input className="h-10"`. Use react-hook-form's `Form*` components where possible, and rely on `aria-invalid` for error styling.
-  - Error banner: `rounded-lg border border-destructive/30 bg-destructive/10 text-destructive` (as in `settings-form.tsx`).
+  - Error banner: `rounded-lg border border-destructive/30 bg-destructive/10 text-destructive` (as in `FormNotice` in `components/settings/settings-section.tsx`).
   - Empty or loading block: `flex min-h-65 items-center justify-center rounded-xl border border-dashed` (as in `users-table.tsx`).
   - Tables: wrap them in `rounded-xl border`, and hide secondary columns with `hidden md:table-cell` and its `lg:`/`xl:` variants (as in `applications-table.tsx`).
   - Links styled as buttons: `<Button asChild><Link …/></Button>`.
   - Merge classes with `cn()` from `@/lib/utils`.
-- **Oversized files:** several feature components are far past the 150-line guideline, such as `application-form.tsx` (~1900 lines), `application-details-dialog.tsx` (~490), `settings-form.tsx` (~370) and `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
+- **Oversized files:** several feature components are far past the 150-line guideline, such as `application-form.tsx` (~1900 lines), `application-details-dialog.tsx` (~490) and `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
 
 ## UI and coding rules
 

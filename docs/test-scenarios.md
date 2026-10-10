@@ -66,41 +66,35 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 
 ## 3. Settings
 
-Files: `components/settings/settings-form.tsx`, `hooks/use-settings.ts`, `lib/settings.ts`, `lib/ui-preferences.ts`, `components/theme-sync.tsx`.
+Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferences-section.tsx`, `security-section.tsx`, `settings-section.tsx`, `lib/settings.ts`, `lib/ui-preferences.ts`, `components/theme-sync.tsx`.
 
 ### Load
 
-1. **Load and normalize.** `GET /api/settings` loads the settings. A flat response and a `{ settings }` response both work. `0/1/"true"/"1"` are read as booleans, and a missing `notifications` defaults to on.
-2. **Names come from the auth user.** First and last name are taken from the cached auth user, never from `/api/settings` (`normalizeSettings` returns only `sidebar_collapsed`, `theme`, `notifications`).
-3. **Read-only email.** The email field can't be edited.
-4. **Load fails.** An error is shown, and saving should be blocked.
-   **Known issue:** the form stays saveable, so saving would send the defaults (light theme, notifications on) and overwrite the backend.
+1. **Load.** `GET /api/settings` → `data.profile` (`first_name`, `last_name`, `username`, `email`) and `data.preferences` (`theme`, `sidebar_collapsed`, `notifications`, `alert_sound`, already typed with defaults). A spinner shows while loading.
+2. **Load fails.** An error banner is shown and no section is rendered, so nothing can be saved over the backend values.
+3. **Three sections, top to bottom:** "პირადი ინფორმაცია", "ინტერფეისის პარამეტრები", "უსაფრთხოება". On mobile they stack at full width.
 
-### Save
+### Personal information (own save button)
 
-5. **Dirty tracking.** Editing a field marks the form dirty, and reverting the change clears it.
-6. **Save.** `POST /api/settings` with `{ settings: { sidebar_collapsed, theme, notifications } }` (no names or email) → "Settings saved." Then:
-   - if the first or last name changed, `PUT /api/auth/me` with `{ first_name, last_name }`, and the returned `data.user` replaces the cached auth user; an empty name → 424 and the Georgian message in the banner,
-   - the theme and sidebar values are written to `localStorage`,
-   - other open tabs switch theme through the `storage` event.
-7. **Extra reload after save.** A save currently triggers an extra `GET /api/settings`, because the load effect depends on the auth user. Check this doesn't cause a flicker.
+4. **Button disabled until a change.** "შენახვა" is disabled on load; typing in first or last name enables it; reverting to the original value disables it again.
+5. **Read-only fields.** Username and email can't be edited (an admin changes them).
+6. **Client-side validation.** A name shorter than 2 characters → a Georgian error under the field, no request.
+7. **Save.** `PUT /api/settings/profile` with `{ first_name, last_name }` → "პროფილი განახლდა.", the button disables again, and the header shows the new name (the cached auth user is updated). A reload shows the saved names.
+8. **Backend validation.** A 424 is shown under the matching field; any other error appears in the section's banner.
 
-### Theme and sidebar
+### Interface preferences (own save button)
 
-8. **Theme preview.** Changing the theme applies it immediately. An unsaved change should revert when you leave the page.
-   **Known issue:** it stays applied until a reload.
-9. **Saved dark theme on reload.** The page should load dark.
-   **Known issue:** there's a brief light flash, because `ThemeSync` runs in an effect after first paint.
-10. **Sidebar toggle out of sync.** If `localStorage` and the backend disagree on `sidebar_collapsed`, every click on the toggle should have a visible effect.
-    **Known issue:** the toggle displays the shell's value but flips the settings value, so the first click does nothing visible.
+9. **Button disabled until a change.** Changing the theme or a toggle enables "შენახვა"; switching back disables it.
+10. **Applied on save only.** Theme and compact sidebar take effect after saving (`PUT /api/settings/preferences` with `{ preferences: { theme, sidebar_collapsed, notifications } }`), not while editing. The values are also written to `localStorage`, so other open tabs switch through the `storage` event.
+11. **Saved values on reload.** The page loads with the saved theme and toggles.
+    **Known issue:** a saved dark theme still flashes light briefly, because `ThemeSync` runs in an effect after first paint.
+12. **Independent saves.** Saving one section doesn't send or reset the other section's unsaved changes.
 
-### Change password
+### Security
 
-11. **Empty or mismatched fields.** Any of the three fields empty, or new password ≠ repeat → a Georgian error is shown and no request is sent.
-12. **Backend rules.** Wrong current password, a new password shorter than 8 characters, without mixed case/number/symbol, or equal to the current one → 424, and the dialog shows the specific Georgian field message.
-13. **Success.** `POST /api/auth/change-password` with `{ current_password, password, password_confirmation }` → the dialog closes; other browsers/devices of the same user are signed out, this one stays signed in.
-    **Known issue:** the success message is rendered inside the dialog that has just closed. Old messages also reappear when the dialog is reopened.
-14. **Only one request on submit.** Submitting the password form sends exactly one request and does not save the settings form (the handler calls `stopPropagation()`). Check the Network tab.
+13. **Empty or mismatched fields.** Any of the three fields empty, or new password ≠ repeat → a Georgian error in the dialog and no request.
+14. **Backend rules.** Wrong current password, a new password shorter than 8 characters, without mixed case/number/symbol, or equal to the current one → 424 with the specific Georgian message in the dialog.
+15. **Success.** `POST /api/auth/change-password` with `{ current_password, password, password_confirmation }` → the dialog closes and the section shows the success message; other browsers/devices of the same user are signed out, this one stays signed in. Reopening the dialog starts with empty fields and no old message.
 
 ## 4. Users admin
 

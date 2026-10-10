@@ -16,5 +16,7 @@ export const API_ROUTES = {
     },
     settings: {
         index: "/api/settings",
+        profile: "/api/settings/profile",
+        preferences: "/api/settings/preferences",
     },
 } as const;
