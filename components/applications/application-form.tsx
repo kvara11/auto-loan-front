@@ -135,6 +135,10 @@ type VehicleOptions = {
   transmissions: VehicleOption[];
 };
 
+type ClientLookup = Partial<ApplicationForm> & {
+  id?: string | number;
+};
+
 const defaultForm: ApplicationForm = {
   personal_id: "",
   first_name: "",
@@ -404,7 +408,7 @@ export function ApplicationFormPage() {
     setLookupError(undefined);
 
     try {
-      const response = await api.get<{ client?: Partial<ApplicationForm> }>(
+      const response = await api.get<{ client?: ClientLookup }>(
         `/api/clients/personal/${encodeURIComponent(form.personal_id)}`,
       );
 
@@ -562,7 +566,7 @@ export function ApplicationFormPage() {
     setSubmitError(undefined);
 
     try {
-      const response = await api.post("/api/clients", {
+      const response = await api.post<{ client?: { id?: string | number } }>("/api/clients", {
         first_name: form.first_name,
         last_name: form.last_name,
         personal_id: form.personal_id,

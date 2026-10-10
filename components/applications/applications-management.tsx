@@ -23,7 +23,7 @@ export function ApplicationsManagement() {
 
     const loadApplications = async () => {
       try {
-        const response = await api.get<{ data?: { applications?: ApplicationRecord[] } | ApplicationRecord[] }>("/api/applications")
+        const response = await api.get<ApplicationRecord[] | { applications?: ApplicationRecord[] }>("/api/applications")
 
         if (!active) return
 
