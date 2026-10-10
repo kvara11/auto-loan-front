@@ -33,7 +33,8 @@ export type UserFormInput = {
 }
 
 // The role that must belong to a branch (backend: StoreUserRequest::branchRules).
-export const BRANCH_REQUIRED_ROLE = "credit-officer"
+// Mirrors StoreUserRequest::BRANCH_REQUIRED_ROLES on the backend.
+export const BRANCH_REQUIRED_ROLES = ["credit-officer", "branch-manager"]
 
 export type AdminUserResponse = {
   id: number

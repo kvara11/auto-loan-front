@@ -7,6 +7,7 @@ import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { api, getApiErrorMessage } from "@/lib/axios"
+import { useAuthUser } from "@/lib/auth-storage"
 import { type ApplicationRecord } from "@/components/applications/applications-types"
 import { ApplicationsTable } from "@/components/applications/applications-table"
 import { ApplicationDetailsDialog } from "@/components/applications/application-details-dialog"
@@ -17,6 +18,8 @@ export function ApplicationsManagement() {
   const [error, setError] = useState<string | undefined>()
   const [selectedApplication, setSelectedApplication] = useState<ApplicationRecord | null>(null)
   const [detailsOpen, setDetailsOpen] = useState(false)
+  // UX only: the backend enforces applications.create on POST /api/applications.
+  const canCreate = useAuthUser()?.permissions?.includes("applications.create") ?? false
 
   useEffect(() => {
     let active = true
@@ -71,14 +74,16 @@ export function ApplicationsManagement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button asChild type="button" className="h-10">
-          <Link href="/dashboard/applications/new">
-            <Plus className="size-4" />
-            ახალი განაცხადი
-          </Link>
-        </Button>
-      </div>
+      {canCreate ? (
+        <div className="flex justify-end">
+          <Button asChild type="button" className="h-10">
+            <Link href="/dashboard/applications/new">
+              <Plus className="size-4" />
+              ახალი განაცხადი
+            </Link>
+          </Button>
+        </div>
+      ) : null}
 
       <Card className="border-none shadow-none bg-transparent">
         <CardContent className="p-0">

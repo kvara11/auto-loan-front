@@ -86,6 +86,7 @@ export function ApplicationsTable({
                   </span>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-tight">
                     ოფიცერი: {app.officer.first_name} {app.officer.last_name}
+                    {app.branch ? ` · ${app.branch.name}` : ""}
                   </span>
                 </div>
               </TableCell>

@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { buildUserFormSchema, emptyUserForm } from "@/components/users/user-form-schema"
-import { BRANCH_REQUIRED_ROLE, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import { BRANCH_REQUIRED_ROLES, type UserFormInput, type UserRecord } from "@/components/users/users-types"
 import { getApiErrorMessage, getApiFieldErrors } from "@/lib/axios"
 
 type Option = { label: string; value: string }
@@ -115,7 +115,7 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
 
   // Only active branches can be assigned; keep the user's current branch visible even if inactive.
   const branchOptions = branches.filter((branch) => branch.active || branch.value === initialUser?.branchId)
-  const noBranchOption = role === BRANCH_REQUIRED_ROLE ? undefined : { label: "ფილიალის გარეშე", value: NO_BRANCH }
+  const noBranchOption = BRANCH_REQUIRED_ROLES.includes(role) ? undefined : { label: "ფილიალის გარეშე", value: NO_BRANCH }
 
   const handleOpenChange = (next: boolean) => {
     if (!next) setSubmitError(undefined)

@@ -5,7 +5,6 @@ import type { FormEvent, ReactNode } from "react"
 import { Bell, PanelLeft, Save, ShieldAlert } from "lucide-react"
 
 import { useDashboardShellState } from "@/components/dashboard/dashboard-shell-state"
-import { useAuthUser, saveAuthUser } from "@/lib/auth-storage"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -71,7 +70,6 @@ export function SettingsForm() {
     const dashboardShellState = useDashboardShellState()
     const collapsed = dashboardShellState?.collapsed ?? false
     const setCollapsed = dashboardShellState?.setCollapsed ?? (() => undefined)
-    const authUser = useAuthUser()
     const { settings, status, error, success, isDirty, updateSetting, submit } = useSettings()
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
     const [currentPassword, setCurrentPassword] = useState("")
@@ -108,15 +106,6 @@ export function SettingsForm() {
         const saved = await submit()
 
         if (!saved) return
-
-        if (authUser) {
-            saveAuthUser({
-                ...authUser,
-                first_name: settings.first_name,
-                last_name: settings.last_name,
-                email: settings.email,
-            })
-        }
 
         setStoredTheme(settings.theme)
         setStoredSidebarCollapsed(settings.sidebar_collapsed)

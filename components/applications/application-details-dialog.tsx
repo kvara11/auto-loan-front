@@ -159,10 +159,7 @@ export function ApplicationDetailsDialog({
                         {application.client.last_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        ID: {application.client.id}{" "}
-                        {application.client.username
-                          ? `(@${application.client.username})`
-                          : ""}
+                        პ/ნ: {application.client.personal_id}
                       </p>
                     </div>
                     <div className="grid gap-1">

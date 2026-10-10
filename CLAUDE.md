@@ -34,7 +34,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 ### Auth and session
 
 - There is no route protection: no `proxy.ts` (Next 16's replacement for `middleware.ts`) and no server-side guard. Pages render for anyone, and the backend rejects unauthenticated API calls.
-- `AuthUser.permissions` and `AuthUser.role` are not read anywhere. The only access control in the UI is which modules the backend sends for the sidebar, and every page is still reachable by URL.
+- `AuthUser.role` is not read anywhere, and `AuthUser.permissions` only hides the "ახალი განაცხადი" button without `applications.create` (`applications-management.tsx`). Permissions are cached at login, so a user must log in again to see role changes. Otherwise the only access control in the UI is which modules the backend sends for the sidebar; every page is still reachable by URL, and the backend answers 401/404.
 - `/` redirects to `/login`. The login page calls `/api/auth/me` first and goes straight to `/dashboard` if a session already exists. There is no `/register` page and no self-registration: the backend creates users only through the admin endpoint `POST /api/admin/users` (`users.manage`), which the users screen doesn't call yet.
 - `lib/auth-storage.ts` caches the backend's `AuthUser` (including `permissions` and `modules`) in `sessionStorage`, and `useAuthUser()` reads it through `useSyncExternalStore`.
   - `remember_me` is only sent to the backend. The user is always cached in `sessionStorage`, so every new tab fetches `/api/auth/me` again.
@@ -56,7 +56,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Settings and preferences
 
-- `/api/settings` stores names, theme, notifications and sidebar_collapsed (`lib/settings.ts`, `hooks/use-settings.ts`). `normalizeSettings` accepts either a flat object or a `{ settings }` wrapper, and turns `0/1/"true"/"1"` into booleans.
+- `/api/settings` stores only preferences: theme, notifications and sidebar_collapsed (`lib/settings.ts`, `hooks/use-settings.ts`). `normalizeSettings` accepts either a flat object or a `{ settings }` wrapper, and turns `0/1/"true"/"1"` into booleans. Names are profile data: the form shows them from the auth user and, when they change, `saveProfile()` calls `PUT /api/auth/me` and caches the returned user. Email is read-only. Don't send names through `/api/settings` again: empty strings used to arrive as `null` and broke the save.
 - After a save, `settings-form.tsx` also writes the theme and sidebar values to `localStorage` (`lib/ui-preferences.ts`). The rest of the app reads only `localStorage`.
   - `ThemeSync` in the root layout reads the theme and toggles the `dark` class on `<html>` in an effect. There is no script that runs before first paint, so dark-mode users see a light flash on load.
   - The shell reads the sidebar value through its own copy of `getStoredSidebarCollapsed` in `dashboard-shell-state.tsx`.
@@ -66,7 +66,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 - The page loads `GET /api/admin/users`, `GET /api/admin/roles` and `GET /api/admin/branches` with `Promise.allSettled`; failures are silent.
 - Create → `POST /api/admin/users`, edit → `PUT /api/admin/users/:id` (payload from `toUserPayload` in `users-types.ts`; passwords only on create). The list is updated from the server's response. The toggle calls `POST /api/admin/users/:id/activation`. The delete button is commented out.
-- `user-form-schema.ts` mirrors the backend rules (username `[A-Za-z0-9._-]`, password ≥8 + confirmation on create). A branch is required when the role is `credit-officer` (`BRANCH_REQUIRED_ROLE`); other roles get a "ფილიალის გარეშე" option. Only active branches are offered, plus the user's current one.
+- `user-form-schema.ts` mirrors the backend rules (username `[A-Za-z0-9._-]`, password ≥8 + confirmation on create). A branch is required for `credit-officer` and `branch-manager` (`BRANCH_REQUIRED_ROLES`); other roles get a "ფილიალის გარეშე" option. Only active branches are offered, plus the user's current one.
 - Dialog forms show backend 424 errors on their fields with `getApiFieldErrors()` + `form.setError`, and other errors in a banner (pattern used by `user-form-dialog.tsx` and `branch-form-dialog.tsx`).
 - Filtering and pagination are client-side. The default status filter is `"active"`, so inactive users start hidden.
 
@@ -77,13 +77,13 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Loan applications (`components/applications/`)
 
-- **List:** `GET /api/applications`, where `data` is either an array or `{ applications }`. The eye button opens `application-details-dialog.tsx`, which fetches `GET /api/applications/:id` and reads `data.application`.
+- **List:** `GET /api/applications`, where `data` is either an array or `{ applications }`. The backend returns only the user's scope (officer: own; branch manager: branch; risk manager: non-Draft; auditor: all; administrator: 401). The officer line in the table also shows the application's branch. The eye button opens `application-details-dialog.tsx`, which fetches `GET /api/applications/:id` and reads `data.application`.
 - **Detail page:** `/dashboard/applications/[id]` (`application-detail.tsx`) calls the same endpoint but treats `data` as a flat `ApplicationDetailRecord` (`client_name`, `personal_id`, ...). Nothing links to this page and it is English-only. Check the real backend response before building on either shape.
 - **Status:** the raw backend string, shown untranslated. The table colors "Draft", "Approved" and "Rejected". The date and money formatters are copied separately into the table, the dialog and the detail page.
 - **New application** (`application-form.tsx`, ~1900 lines) has two steps:
   1. **Client.** Look up the client by personal ID. The lookup status becomes `existing` or `new`, and any lookup error is treated as `new`. "Next" then:
      - skips the API when an existing client is unchanged,
-     - calls `PUT /api/clients/:id` when an existing client was edited,
+     - calls `PUT /api/clients/:id` when an existing client was edited (the backend rejects a changed `personal_id` with 424),
      - otherwise calls `POST /api/clients` and stores the returned `clientId`.
   2. **Application.** Collect income (employee, entrepreneur or lease items), the loan, the co-borrower or guarantor and the vehicle, then call `POST /api/applications`.
 - **Form internals:**

@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react"
 import { isAxiosError } from "axios"
 
 import { getApiErrorMessage } from "@/lib/axios"
-import { useAuthUser } from "@/lib/auth-storage"
-import { fetchSettings, getDefaultSettings, saveSettings, type UserSettings } from "@/lib/settings"
+import { saveAuthUser, useAuthUser } from "@/lib/auth-storage"
+import { fetchSettings, getDefaultSettings, saveProfile, saveSettings, type UserSettings } from "@/lib/settings"
 
 type SettingsStatus = "loading" | "ready" | "saving" | "error"
 
@@ -88,6 +88,12 @@ export function useSettings() {
             setSuccess(null)
 
             await saveSettings(settings)
+
+            const namesChanged = settings.first_name !== baseline.first_name || settings.last_name !== baseline.last_name
+            if (namesChanged) {
+                const user = await saveProfile(settings.first_name.trim(), settings.last_name.trim())
+                if (user) saveAuthUser(user)
+            }
 
             setBaseline(settings)
             setStatus("ready")

@@ -71,8 +71,7 @@ Files: `components/settings/settings-form.tsx`, `hooks/use-settings.ts`, `lib/se
 ### Load
 
 1. **Load and normalize.** `GET /api/settings` loads the settings. A flat response and a `{ settings }` response both work. `0/1/"true"/"1"` are read as booleans, and a missing `notifications` defaults to on.
-2. **Backend omits names.** First and last name should fall back to the cached auth user.
-   **Known issue:** `normalizeSettings` returns `""`, which overwrites the auth user's values.
+2. **Names come from the auth user.** First and last name are taken from the cached auth user, never from `/api/settings` (`normalizeSettings` returns only `sidebar_collapsed`, `theme`, `notifications`).
 3. **Read-only email.** The email field can't be edited.
 4. **Load fails.** An error is shown, and saving should be blocked.
    **Known issue:** the form stays saveable, so saving would send the defaults (light theme, notifications on) and overwrite the backend.
@@ -80,8 +79,8 @@ Files: `components/settings/settings-form.tsx`, `hooks/use-settings.ts`, `lib/se
 ### Save
 
 5. **Dirty tracking.** Editing a field marks the form dirty, and reverting the change clears it.
-6. **Save.** `POST /api/settings` with `{ settings }` → "Settings saved." Then:
-   - the cached auth user gets the new names,
+6. **Save.** `POST /api/settings` with `{ settings: { sidebar_collapsed, theme, notifications } }` (no names or email) → "Settings saved." Then:
+   - if the first or last name changed, `PUT /api/auth/me` with `{ first_name, last_name }`, and the returned `data.user` replaces the cached auth user; an empty name → 424 and the Georgian message in the banner,
    - the theme and sidebar values are written to `localStorage`,
    - other open tabs switch theme through the `storage` event.
 7. **Extra reload after save.** A save currently triggers an extra `GET /api/settings`, because the load effect depends on the auth user. Check this doesn't cause a flicker.
@@ -131,7 +130,7 @@ Files: `components/users/*`.
 ### Create, edit and delete
 
 10. **Create.** `POST /api/admin/users` with names, username, email, password + confirmation, role and `branch_id` → the dialog closes and the user appears at the top of the list; it is still there after a reload.
-11. **Branch rule.** Role `საკრედიტო ოფიცერი` without a branch → client-side error on the branch field, no request. Other roles offer "ფილიალის გარეშე". Deactivated branches are not offered (except the user's current one when editing).
+11. **Branch rule.** Role `საკრედიტო ოფიცერი` or `ფილიალის მენეჯერი` without a branch → client-side error on the branch field, no request. Other roles offer "ფილიალის გარეშე". Deactivated branches are not offered (except the user's current one when editing).
 12. **Backend validation.** A taken username/email, or a weak password → the dialog stays open and the Georgian message appears under the field.
 13. **Edit.** `PUT /api/admin/users/:id` with names, username, email, role and branch (no password fields) → the row updates in place. Editing a super-admin, or changing your own role, shows the backend message in the dialog banner.
 14. **Inactive users.** The edit button is disabled for inactive users (the backend would allow it).
@@ -166,6 +165,15 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 10. **Bad dates.** An unparseable date should not crash the table.
     **Known issue:** the formatter throws a `RangeError`.
 
+### Who sees what (data scope, enforced by the backend)
+
+10a. **Credit officer.** Only their own applications. Opening another officer's application by URL or id → 404 "განაცხადი ვერ მოიძებნა".
+10b. **Branch manager.** Every application of their branch, Drafts included; nothing from other branches. Without a branch → an empty list.
+10c. **Risk manager.** Every non-Draft application of every branch; no Drafts.
+10d. **Auditor / super-admin.** Everything. **Administrator:** no "განაცხადები" in the menu, and `/dashboard/applications` by URL → 401 error card.
+10e. **New-application button.** Shown only when the cached user has `applications.create` (credit officer, super-admin). After a role change the user must log in again for the button to update.
+10f. **Branch in the list.** The officer line shows ` · <branch name>` when the application has a branch.
+
 ### Details dialog
 
 11. **Open.** The eye button → `GET /api/applications/:id`, reading `data.application` → the dialog shows its sections. The header shows the number and status from the list row.
@@ -196,7 +204,8 @@ File: `components/applications/application-form.tsx`.
 
 6. **Required fields.** Blank `personal_id`, `first_name`, `last_name`, `phone` or `birth_date` → "სავალდებულო ველი" under each field, and no API call. There are no format checks yet, for example for the 11-digit personal ID, the phone or the email.
 7. **Existing client, unchanged.** The form goes to step 2 without sending any request.
-8. **Existing client, edited.** `PUT /api/clients/:id` with the 10 client fields, `family_members` as a number → step 2.
+8. **Existing client, edited.** `PUT /api/clients/:id` with the 10 client fields, `family_members` as a number → step 2. The backend stores names, birth date, contacts and addresses; `marital_status` and `family_members` are ignored (no columns yet). A client registered by another officer can be found and edited too (shared registry).
+8a. **Personal ID changed on an existing client.** The PUT returns 424 → the banner shows "პირადი ნომრის შეცვლა დაუშვებელია."
 9. **Update fails.** The PUT throws → an error banner, and the form stays on step 1. The PUT's `success` flag is not checked.
 10. **New client.** `POST /api/clients` → the form needs `success` and `data.client.id`, otherwise it shows an error banner. On success it stores the client id and goes to step 2.
 11. **Back after creating a client.** Going back from step 2 and pressing Next again should not create a second client.
@@ -242,6 +251,7 @@ File: `components/applications/application-form.tsx`.
 ### Submit
 
 15. **Missing client id.** Submitting without a client id shows the "client identifier not found" banner.
+15a. **Officer without a branch.** `POST /api/applications` → 400, and the banner shows "განაცხადის შესაქმნელად აქტიური ფილიალი უნდა გქონდეთ მინიჭებული. მიმართეთ ადმინისტრატორს."
 16. **Success.** `POST /api/applications` with the form, `client_id` and the converted numbers → a success toast, then a redirect to `/dashboard/applications` after 900 ms. The submit button should stay disabled until the redirect.
     **Known issue:** the button is enabled again during those 900 ms, so the application can be submitted twice.
 17. **Failure.** `success: false` or a thrown error → a banner with the backend message or the Georgian fallback.

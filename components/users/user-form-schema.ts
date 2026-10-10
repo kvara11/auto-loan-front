@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { BRANCH_REQUIRED_ROLE, type UserFormInput } from "@/components/users/users-types"
+import { BRANCH_REQUIRED_ROLES, type UserFormInput } from "@/components/users/users-types"
 
 // Mirrors the backend rules (StoreUserRequest / UpdateUserRequest); the backend stays the source of truth.
 export function buildUserFormSchema(mode: "create" | "edit") {
@@ -20,8 +20,8 @@ export function buildUserFormSchema(mode: "create" | "edit") {
       branch_id: z.string(),
     })
     .superRefine((value: UserFormInput, ctx) => {
-      if (value.role === BRANCH_REQUIRED_ROLE && !value.branch_id) {
-        ctx.addIssue({ code: "custom", path: ["branch_id"], message: "საკრედიტო ოფიცერს ფილიალი აუცილებლად უნდა მიენიჭოს" })
+      if (BRANCH_REQUIRED_ROLES.includes(value.role) && !value.branch_id) {
+        ctx.addIssue({ code: "custom", path: ["branch_id"], message: "ამ როლს ფილიალი აუცილებლად უნდა მიენიჭოს" })
       }
 
       if (mode === "edit") return

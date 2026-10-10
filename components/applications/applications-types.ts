@@ -46,11 +46,12 @@ export type ApplicationRecord = {
   created_at: string
   updated_at: string
   deleted_at: string | null
+  branch: { id: number; code: string; name: string } | null
   client: {
     id: number
     first_name: string
     last_name: string
-    username: string | null
+    personal_id: string
   }
   officer: {
     id: number
