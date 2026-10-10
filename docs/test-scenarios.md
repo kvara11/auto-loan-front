@@ -8,7 +8,7 @@ File paths are relative to the repo root. Backend endpoints are on `NEXT_PUBLIC_
 
 ## 1. Auth and session
 
-Files: `app/(auth)/login/page.tsx`, `app/(auth)/register/page.tsx`, `lib/auth-storage.ts`, `lib/validations/auth.ts`, `components/dashboard/dashboard-header.tsx`, `components/dashboard/dashboard-shell.tsx`.
+Files: `app/(auth)/login/page.tsx`, `lib/auth-storage.ts`, `lib/validations/auth.ts`, `components/dashboard/dashboard-header.tsx`, `components/dashboard/dashboard-shell.tsx`.
 
 ### Login
 
@@ -23,9 +23,9 @@ Files: `app/(auth)/login/page.tsx`, `app/(auth)/register/page.tsx`, `lib/auth-st
 
 ### Register
 
-8. **Valid registration.** `POST /api/auth/register` with first and last name, username, email and password → the app navigates to `/login`.
-9. **Validation.** All fields are required, the email must be valid, and the password needs at least 6 characters. Errors are shown in Georgian.
-10. **Backend rejection.** Duplicate username, a 422 and so on → the backend's `message` is shown.
+8. **No self-registration.** `/register` doesn't exist (Next.js 404), and the backend's `POST /api/auth/register` returns 404. Users are created by an admin (`POST /api/admin/users`).
+9. *(Removed.)*
+10. *(Removed.)*
 
 ### Logout and multiple tabs
 

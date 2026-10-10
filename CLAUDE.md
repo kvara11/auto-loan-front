@@ -35,7 +35,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 - There is no route protection: no `proxy.ts` (Next 16's replacement for `middleware.ts`) and no server-side guard. Pages render for anyone, and the backend rejects unauthenticated API calls.
 - `AuthUser.permissions` and `AuthUser.role` are not read anywhere. The only access control in the UI is which modules the backend sends for the sidebar, and every page is still reachable by URL.
-- `/` redirects to `/login`. The login page calls `/api/auth/me` first and goes straight to `/dashboard` if a session already exists. Register posts the form and then sends the user to `/login`.
+- `/` redirects to `/login`. The login page calls `/api/auth/me` first and goes straight to `/dashboard` if a session already exists. There is no `/register` page and no self-registration: the backend creates users only through the admin endpoint `POST /api/admin/users` (`users.manage`), which the users screen doesn't call yet.
 - `lib/auth-storage.ts` caches the backend's `AuthUser` (including `permissions` and `modules`) in `sessionStorage`, and `useAuthUser()` reads it through `useSyncExternalStore`.
   - `remember_me` is only sent to the backend. The user is always cached in `sessionStorage`, so every new tab fetches `/api/auth/me` again.
   - Cross-tab sync works through `localStorage[AUTH_SYNC_KEY]`. Any write to it fires a `storage` event, and other tabs clear their cached user when they see it. That includes writes from logins, failed logins, logouts and settings saves.
@@ -96,7 +96,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - **Tokens** (`app/globals.css`): a neutral oklch palette in `:root` and `.dark`, mapped through `@theme inline`. Tailwind v4 has no `tailwind.config`. The only colored token is `--destructive`. There are no success, warning or info tokens, which is why feature code uses `emerald-*`, `red-*` and `amber-*` palette classes. When a status color is needed, prefer adding a token.
 - **Fonts are broken:** `globals.css` sets `--font-sans: var(--font-sans)`, which refers to itself, while `layout.tsx` defines `--font-geist-sans`. Geist is therefore never applied, and pages render in the browser's default font. Geist also has no Georgian glyphs (`subsets: ["latin"]`), so Georgian text always comes from an OS fallback font. `<html lang="en">` should be `ka`.
 - **Dark mode:** the `.dark` class on `<html>` with `@custom-variant dark (&:is(.dark *))`.
-  - Login, register and settings have `dark:` variants.
+  - Login and settings have `dark:` variants.
   - The applications feature (form, table, dialog) and the users table row buttons hardcode light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
 - **shadcn components** (style `radix-nova`; add one with `npx shadcn add <name>`):
   - `dialog`, `alert-dialog` and `select` import `@radix-ui/react-*`; the rest import the `radix-ui` monopackage, which new adds use.
