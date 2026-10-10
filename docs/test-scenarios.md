@@ -149,9 +149,9 @@ Files: `app/dashboard/branches/page.tsx`, `components/branches/*`.
 5. **Edit.** `PUT` with code and name keeps the current status.
 6. **Deactivate / activate.** The power button sends `PUT` with `is_active` flipped; the badge switches between "აქტიური" and "გათიშული". There is no delete.
 
-## 5. Applications list, details dialog and detail page
+## 5. Applications list, detail page and workflow
 
-Files: `components/applications/applications-management.tsx`, `applications-table.tsx`, `application-details-dialog.tsx`, `application-detail.tsx`, `app/dashboard/applications/**`.
+Files: `components/applications/applications-management.tsx`, `applications-table.tsx`, `components/application-detail/*`, `lib/applications.ts`, `app/dashboard/applications/**`.
 
 ### List
 
@@ -161,11 +161,12 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 4. **`success: false`.** An error card shows the backend message. Its retry button reloads the page.
 5. **Request throws.** The backend message is shown, or the Georgian fallback.
 6. **Missing number.** A row with `application_no: null` shows the `id` instead.
-7. **Status badges.** "Draft" is outlined, "Approved" green, "Rejected" red, and anything else uses the default badge. The text is the raw backend string.
+7. **Status badges.** Each status shows the Georgian short label in its status color with a dot (`StatusBadge`); an unknown string shows raw in the draft style.
 8. **LTV warning.** A row with `ltv_warning` set shows the LTV in red with a pulsing dot whose tooltip holds the warning.
 9. **Responsive columns.** Secondary columns hide at the `md`, `lg` and `xl` breakpoints.
-10. **Bad dates.** An unparseable date should not crash the table.
-    **Known issue:** the formatter throws a `RangeError`.
+10. **Bad dates.** An unparseable date shows "—" (shared `formatDate`).
+10h. **Filters.** "სტატუსი" (ყველა სტატუსი + the five statuses) and "შექმნის თარიღი — დან / მდე" reload the list from the backend (`GET /api/applications?status=&start_date=&end_date=`, dates inclusive). The "to" date can't be set before the "from" date (`min`/`max`); the backend also rejects it with 424. "გასუფთავება" is disabled until a filter is set and resets all three. No match → "განაცხადები ვერ მოიძებნა". The date format follows the browser's locale.
+10g. **Eye button.** Links to `/dashboard/applications/:id` (middle-click opens a new tab).
 
 ### Who sees what (data scope, enforced by the backend)
 
@@ -173,21 +174,29 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 10b. **Branch manager.** Every application of their branch, Drafts included; nothing from other branches. Without a branch → an empty list.
 10c. **Risk manager.** Every non-Draft application of every branch; no Drafts.
 10d. **Auditor / super-admin.** Everything. **Administrator:** no "განაცხადები" in the menu, and `/dashboard/applications` by URL → 401 error card.
-10e. **New-application button.** Shown only when the cached user has `applications.create` (credit officer, super-admin). After a role change the user must log in again for the button to update.
+10e. **New-application button.** In the filters bar (right end on desktop, full-width first row on mobile). Shown only when the cached user has `applications.create` (credit officer, super-admin). After a role change the user must log in again for the button to update.
 10f. **Branch in the list.** The officer line shows ` · <branch name>` when the application has a branch.
-
-### Details dialog
-
-11. **Open.** The eye button → `GET /api/applications/:id`, reading `data.application` → the dialog shows its sections. The header shows the number and status from the list row.
-12. **Missing `application` key.** An error message is shown inside the dialog.
-13. **Switching rows quickly.** The dialog should show the last application clicked.
-    **Known issue:** there is no guard against late responses, so an earlier response can overwrite it.
-14. **Co-borrower section.** It is shown when `has_coborrower_guarantor` is `"1"` or `1` and a name is set. Check what the backend returns for applications created by the form, which sends a boolean.
 
 ### Detail page `/dashboard/applications/[id]`
 
-15. **Load.** Success → the content renders. `success: false` or a thrown error → the "Application not available" card with the message.
-16. **Response shape.** This page reads `data` as a flat record (`client_name`, `personal_id`, `notes`), while the dialog reads `data.application` from the same endpoint. Confirm which shape the backend returns. Also note that nothing links to this page yet and it is English-only.
+11. **Load.** Skeleton, then `GET /api/applications/:id` (`data.application`, `data.actions`) and `GET …/history` → header "განაცხადი <number>" + status badge, three info cards, LTV, officer comment and history.
+12. **Not found / out of scope.** Another officer's application, or a Draft opened by a risk manager → the "განაცხადი ვერ მოიძებნა" card with a link back to the list; no data leaks.
+13. **"მალე" fields.** "შემოსავალი (თვიური)" and "ყოველთვიური გადასახადი" show "—" + "მალე"; "რედაქტირება" is disabled with "მალე". No invented numbers.
+14. **LTV card.** requested amount / market value (rounded). Over the stored `max_ltv` → red gauge and the "აჭარბებს ლიმიტს" text; no market value → "—"; no `max_ltv` → "მაქსიმალური LTV არ არის მითითებული."
+15. **History.** Entries oldest first with label, `ე. გვარი · DD.MM.YYYY, HH:MM` and the comment of return/reject; while "გაგზავნილია რისკებში" a dashed "გადაწყვეტილების მოლოდინში · რისკების განყოფილება" step ends the list.
+15a. **Back button.** The "← უკან" button at the right end of the header (after the action buttons) returns to the previous page (list or dashboard); a page opened directly (new tab, pasted URL) goes to `/dashboard/applications`.
+16. **Layout.** 1440: two columns (2fr/1fr); 375: one column, buttons wrap, no sideways scroll; both themes readable.
+
+### Workflow actions (buttons come from `data.actions`)
+
+17. **Officer, own Draft or Returned.** Only "რისკებში გაგზავნა" (+ disabled "რედაქტირება"). Confirm → "განაცხადი გაიგზავნა რისკებში." banner, badge "გაგზავნილია რისკებში", the button disappears, history gains "გაგზავნილია რისკებში".
+18. **Officer, Submitted / Approved / Rejected.** No action buttons.
+19. **Risk manager, Submitted.** "დაბრუნება", "უარყოფა", "დამტკიცება". Return or reject with an empty comment → the dialog shows "მიუთითეთ: …" and sends nothing; a backend 424 would show the same way.
+20. **Return.** With remarks → status "დაბრუნებული", the "დაბრუნების მიზეზი" banner under the header (the officer sees it too), history entry with the remarks. The officer can resubmit; the banner then disappears.
+21. **Approve / reject.** Status changes, no buttons remain; reject shows "უარის მიზეზი".
+22. **Branch manager, auditor.** The page opens read-only (no buttons).
+23. **Stale page.** Two risk managers act on the same application: the second gets 409 "ეს ქმედება განაცხადის მიმდინარე სტატუსზე დაუშვებელია." in the dialog; reload shows the real state.
+24. **Super-admin on their own application.** The decision buttons are absent (backend SoD); a direct POST → 403.
 
 ## 6. New application, step 1: client
 
@@ -281,15 +290,14 @@ File: `app/api/stats/vehicle-options/route.ts`.
 ### Dark mode
 
 4. **Dark-mode coverage.** Every screen should be readable in dark mode.
-   **Known issue:** the applications table, form and dialog, and the users table row buttons, use light-only colors such as `bg-white`, `text-slate-800` and `bg-*-100`.
-5. **Native controls.** Date pickers and checkboxes follow the theme.
-   **Known issue:** `color-scheme` is never set, so they stay light.
+   **Known issue:** the new-application form still uses light-only colors such as `bg-white`, `text-slate-800` and `bg-*-100`.
+5. **Native controls.** Date pickers and checkboxes follow the theme (`color-scheme: dark` on `.dark`).
 
 ### Responsive layout
 
 6. **320–375 px.** No page scrolls sideways.
    **Known issue:** the new-application form's sticky footer uses `-mx-6` against the shell's `px-4` and causes horizontal scroll.
-7. **375 px.** The users table, which has 7 columns that don't wrap, scrolls inside its own container, not the whole page. The details dialog's fixed `grid-cols-2` is still readable.
+7. **375 px.** The users table, which has 7 columns that don't wrap, scrolls inside its own container, not the whole page. The application detail page is a single column.
 8. **1024 px with the sidebar expanded.** The users filter row (fixed `220px` columns) and the 5-column lease grid fit without overflow.
 9. **Long Georgian text.** Long module names fit in the `w-64` sidebar, and long card titles aren't clipped by `leading-none`.
 10. **Tap targets.** Interactive elements are at least `h-10`.

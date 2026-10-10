@@ -1,5 +1,5 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
-import { ApplicationDetail } from "@/components/applications/application-detail"
+import { ApplicationDetail } from "@/components/application-detail/application-detail"
 
 type ApplicationDetailPageProps = {
   params: Promise<{ id: string }>

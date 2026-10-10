@@ -5,102 +5,78 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { api, getApiErrorMessage } from "@/lib/axios"
+import { getApiErrorMessage } from "@/lib/axios"
 import { useAuthUser } from "@/lib/auth-storage"
+import { EMPTY_APPLICATION_FILTERS, fetchApplications, type ApplicationFilters } from "@/lib/applications"
 import { type ApplicationRecord } from "@/components/applications/applications-types"
+import { ApplicationsFilters } from "@/components/applications/applications-filters"
 import { ApplicationsTable } from "@/components/applications/applications-table"
-import { ApplicationDetailsDialog } from "@/components/applications/application-details-dialog"
 
 export function ApplicationsManagement() {
   const [applications, setApplications] = useState<ApplicationRecord[]>([])
+  const [filters, setFilters] = useState<ApplicationFilters>(EMPTY_APPLICATION_FILTERS)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>()
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationRecord | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
   // UX only: the backend enforces applications.create on POST /api/applications.
   const canCreate = useAuthUser()?.permissions?.includes("applications.create") ?? false
 
+  // Filtering happens on the backend; every change reloads the list.
   useEffect(() => {
     let active = true
 
-    const loadApplications = async () => {
-      try {
-        const response = await api.get<ApplicationRecord[] | { applications?: ApplicationRecord[] }>("/api/applications")
-
+    fetchApplications(filters)
+      .then((records) => {
         if (!active) return
-
-        if (!response.success) {
-          setError(response.message || "განაცხადების ჩატვირთვა ვერ მოხერხდა")
-          setApplications([])
-          return
-        }
-
-        // Handle different API response structures based on the provided sample
-        let records: ApplicationRecord[] = []
-        if (response.data) {
-          if (Array.isArray(response.data)) {
-            records = response.data
-          } else if (response.data.applications) {
-            records = response.data.applications
-          }
-        }
-
         setApplications(records)
         setError(undefined)
-      } catch (requestError) {
+      })
+      .catch((requestError) => {
         if (!active) return
-
         setError(getApiErrorMessage(requestError) || "განაცხადების ჩატვირთვა ვერ მოხერხდა")
         setApplications([])
-      } finally {
-        if (active) {
-          setLoading(false)
-        }
-      }
-    }
-
-    void loadApplications()
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
 
     return () => {
       active = false
     }
-  }, [])
+  }, [filters])
 
-  const handleViewDetails = (application: ApplicationRecord) => {
-    setSelectedApplication(application)
-    setDetailsOpen(true)
+  const changeFilters = (next: ApplicationFilters) => {
+    setLoading(true)
+    setFilters(next)
   }
 
   return (
     <div className="space-y-4">
-      {canCreate ? (
-        <div className="flex justify-end">
-          <Button asChild type="button" className="h-10">
-            <Link href="/dashboard/applications/new">
-              <Plus className="size-4" />
-              ახალი განაცხადი
-            </Link>
-          </Button>
-        </div>
-      ) : null}
+      <ApplicationsFilters
+        value={filters}
+        onChange={changeFilters}
+        action={
+          canCreate ? (
+            <Button asChild type="button" className="h-10 w-full lg:w-auto">
+              <Link href="/dashboard/applications/new">
+                <Plus className="size-4" />
+                ახალი განაცხადი
+              </Link>
+            </Button>
+          ) : null
+        }
+      />
 
       {error ? (
         <div className="rounded-xl border border-dashed bg-card px-6 py-10 text-center">
           <p className="text-base font-medium text-destructive sm:text-lg">შეცდომა</p>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">{error}</p>
-          <Button variant="outline" className="mt-4 h-10" onClick={() => window.location.reload()}>
-            თავიდან ცდა
+          <Button variant="outline" className="mt-4 h-10" onClick={() => changeFilters(EMPTY_APPLICATION_FILTERS)}>
+            ფილტრების გასუფთავება
           </Button>
         </div>
       ) : (
-        <ApplicationsTable applications={applications} loading={loading} onView={handleViewDetails} />
+        <ApplicationsTable applications={applications} loading={loading} />
       )}
-
-      <ApplicationDetailsDialog
-        application={selectedApplication}
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-      />
     </div>
   )
 }

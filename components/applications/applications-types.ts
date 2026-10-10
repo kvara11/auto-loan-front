@@ -43,6 +43,11 @@ export type ApplicationRecord = {
   ltv: string | number
   max_ltv: string | number
   ltv_warning: string | null
+  // Workflow (set by the backend's ApplicationWorkflowService).
+  submitted_at?: string | null
+  decided_at?: string | null
+  decided_by?: number | null
+  decision_comment?: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -52,6 +57,9 @@ export type ApplicationRecord = {
     first_name: string
     last_name: string
     personal_id: string
+    phone?: string | null
+    email?: string | null
+    address?: string | null
   }
   officer: {
     id: number
@@ -59,4 +67,23 @@ export type ApplicationRecord = {
     last_name: string
     username: string
   }
+}
+
+// Workflow actions; the backend returns the ones the current user may take (`data.actions`).
+export type ApplicationAction = "submit" | "return" | "approve" | "reject"
+
+export type ApplicationDetails = {
+  application: ApplicationRecord
+  actions: ApplicationAction[]
+}
+
+// One loan_logs entry: `action` is "created" or an ApplicationAction.
+export type HistoryEntry = {
+  id: number
+  action: string
+  from_status: string | null
+  to_status: string | null
+  comment: string | null
+  user: { id: number; first_name: string; last_name: string } | null
+  created_at: string
 }

@@ -30,7 +30,7 @@ export function FormNotice({ tone, children }: { tone: "error" | "success"; chil
         "rounded-lg border px-3 py-2 text-sm",
         tone === "error"
           ? "border-destructive/30 bg-destructive/10 text-destructive"
-          : "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+          : "border-success/30 bg-success/10 text-success",
       )}
     >
       {children}

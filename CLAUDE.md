@@ -34,7 +34,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 ### Auth and session
 
 - There is no route protection: no `proxy.ts` (Next 16's replacement for `middleware.ts`) and no server-side guard. Pages render for anyone, and the backend rejects unauthenticated API calls.
-- `AuthUser.role` is not read anywhere, and `AuthUser.permissions` only hides the "ახალი განაცხადი" button without `applications.create` (`applications-management.tsx`). Permissions are cached at login, so a user must log in again to see role changes. Otherwise the only access control in the UI is which modules the backend sends for the sidebar; every page is still reachable by URL, and the backend answers 401/404.
+- `AuthUser.role` is not read anywhere, and `AuthUser.permissions` only hides the "ახალი განაცხადი" button without `applications.create` (`applications-management.tsx`); the detail page's workflow buttons come from the backend's `data.actions`, not from cached permissions. Permissions are cached at login, so a user must log in again to see role changes. Otherwise the only access control in the UI is which modules the backend sends for the sidebar; every page is still reachable by URL, and the backend answers 401/404.
 - `/` redirects to `/login`. The login page calls `/api/auth/me` first and goes straight to `/dashboard` if a session already exists. There is no `/register` page and no self-registration: the backend creates users only through the admin endpoint `POST /api/admin/users` (`users.manage`), which the users screen doesn't call yet.
 - `lib/auth-storage.ts` caches the backend's `AuthUser` (including `permissions` and `modules`) in `sessionStorage`, and `useAuthUser()` reads it through `useSyncExternalStore`.
   - `remember_me` is only sent to the backend. The user is always cached in `sessionStorage`, so every new tab fetches `/api/auth/me` again.
@@ -83,9 +83,10 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Loan applications (`components/applications/`)
 
-- **List:** `GET /api/applications`, where `data` is either an array or `{ applications }`. The backend returns only the user's scope (officer: own; branch manager: branch; risk manager: non-Draft; auditor: all; administrator: 401). The officer line in the table also shows the application's branch. The eye button opens `application-details-dialog.tsx`, which fetches `GET /api/applications/:id` and reads `data.application`.
-- **Detail page:** `/dashboard/applications/[id]` (`application-detail.tsx`) calls the same endpoint but treats `data` as a flat `ApplicationDetailRecord` (`client_name`, `personal_id`, ...). Nothing links to this page and it is English-only. Check the real backend response before building on either shape.
-- **Status:** the list table uses `StatusBadge` and the shared `lib/format.ts` formatters; LTV shows "—" while the stored value is 0. The dialog and the detail page still show the raw status string and keep their own formatter copies.
+- **List:** `GET /api/applications`, where `data` is either an array or `{ applications }`. The backend returns only the user's scope (officer: own; branch manager: branch; risk manager: non-Draft; auditor: all; administrator: 401). The officer line in the table also shows the application's branch. Filters (`applications-filters.tsx`): status and created-date range, sent to the backend by `fetchApplications(filters)` (`lib/applications.ts`, `ApplicationFilters`; empty values are omitted); every change reloads the list. The "ახალი განაცხადი" button is passed in as the bar's `action` (right end on desktop, first on mobile). The eye button (and the dashboard rows) link to the detail page.
+- **Detail page** `/dashboard/applications/[id]` (`components/application-detail/*`, the design's ApplicationDetail): `fetchApplication(id)` (`GET /api/applications/:id` → `data.application` + `data.actions`) and `fetchHistory(id)` (`GET …/history` → `data.history`). Layout `lg:grid-cols-[2fr_1fr]`: header (number, `StatusBadge`, action buttons), the return/reject reason banner (`DecisionBanner`), info cards კლიენტი / სესხის პირობები / ავტომობილი და შეფასება (`InfoCard`; "შემოსავალი" and "ყოველთვიური გადასახადი" are "—" + "მალე"), and on the right `LtvCard` (requested amount / market value, display only, limit = stored `max_ltv`), officer comment, `HistoryTimeline` (plus a "გადაწყვეტილების მოლოდინში" step while submitted). Not-found / out-of-scope shows the backend message with a link back to the list.
+- **Workflow actions:** the buttons are exactly the backend's `data.actions` (`submit` → "რისკებში გაგზავნა"; `return` / `reject` / `approve` → "დაბრუნება" / "უარყოფა" / "დამტკიცება"; config in `action-config.ts`). `ActionDialog` confirms, requires a comment for return/reject (shadcn `Textarea`), calls `performAction()` (`POST …/{action}` with `{ comment }`), then replaces the application and actions from the response, shows the backend message and reloads the history. 409/403/424 messages appear in the dialog banner. "რედაქტირება" is disabled with "მალე" until application editing (T-402).
+- **Status:** the list, dashboard and detail page use `StatusBadge`; history labels come from `getHistoryLabel()` in `lib/application-status.ts`; dates from `formatDate`/`formatDateTime`. The list's LTV shows "—" while the stored value is 0.
 - **New application** (`application-form.tsx`, ~1900 lines) has two steps:
   1. **Client.** Look up the client by personal ID: with the search button, or automatically as soon as the field holds 11 digits (`PERSONAL_ID_PATTERN`). The lookup status becomes `existing` or `new`, and any lookup error is treated as `new`. "Next" then:
      - skips the API when an existing client is unchanged,
@@ -110,7 +111,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - **Not available yet:** features without a backend are shown disabled with a "მალე" badge (e.g. "პაროლი დაგავიწყდათ?", two dashboard KPIs) — never with invented numbers.
 - **Dark mode:** the `.dark` class on `<html>` with `@custom-variant dark (&:is(.dark *))`.
   - Login, dashboard, shell and settings use tokens only, so both themes work.
-  - The applications list and the users/branches tables use tokens too (container `overflow-hidden rounded-xl border bg-card shadow-sm`). The new-application form and the details dialog still hardcode light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
+  - The applications list and the users/branches tables use tokens too (container `overflow-hidden rounded-xl border bg-card shadow-sm`). The new-application form still hardcodes light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
 - **shadcn components** (style `radix-nova`; add one with `npx shadcn add <name>`):
   - `dialog`, `alert-dialog` and `select` import `@radix-ui/react-*`; the rest import the `radix-ui` monopackage, which new adds use.
   - `Button` and `Input` default to `h-8`, so add `h-10` to meet the tap-target rule. `SelectTrigger` is already `h-10`.
@@ -118,7 +119,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - `Badge`: see Status language above. `Skeleton` (`components/ui/skeleton.tsx`) for loading states; `components/ui/loading.tsx` is a custom spinner.
   - The shadcn CLI once added an unrelated npm package `cn` and imported `cn` from it; after `npx shadcn add`, check `package.json` and keep `import { cn } from "@/lib/utils"`.
   - `Table` is restyled to the design: uppercase 12px muted headers, 14px cell padding, `hover:bg-muted` rows.
-  - Not installed: Tabs (even though the rules name it), Textarea, Switch, Tooltip and Toast. The application form uses raw `<textarea>`s and a hand-made toast.
+  - `Textarea` (`components/ui/textarea.tsx`) is used by the workflow dialog. Not installed: Tabs (even though the rules name it), Switch, Tooltip and Toast. The application form still uses raw `<textarea>`s and a hand-made toast.
 - **Patterns to copy:**
   - Page title: pass `title` to `DashboardShell` (top bar). Section card: `rounded-xl border bg-card p-5 shadow-sm sm:p-[22px]` with an `h2.text-[17px] font-semibold`.
   - Field: `div.space-y-2` with a `Label` and an `Input className="h-10"`. Use react-hook-form's `Form*` components where possible, and rely on `aria-invalid` for error styling.
@@ -127,7 +128,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - Tables: wrap them in `rounded-xl border`, and hide secondary columns with `hidden md:table-cell` and its `lg:`/`xl:` variants (as in `applications-table.tsx`).
   - Links styled as buttons: `<Button asChild><Link …/></Button>`.
   - Merge classes with `cn()` from `@/lib/utils`.
-- **Oversized files:** several feature components are far past the 150-line guideline, such as `application-form.tsx` (~1900 lines), `application-details-dialog.tsx` (~490) and `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
+- **Oversized files:** several feature components are far past the 150-line guideline, such as `application-form.tsx` (~1900 lines) and `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
 
 ## UI and coding rules
 

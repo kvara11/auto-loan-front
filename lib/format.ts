@@ -32,3 +32,13 @@ export function formatNumber(value: string | number | null | undefined) {
   const parsed = toNumber(value)
   return parsed === null ? "—" : parsed.toLocaleString("en-US")
 }
+
+// ISO date/time → "08.10.2026, 09:05".
+export function formatDateTime(value: string | null | undefined) {
+  const day = formatDate(value)
+  if (day === "—" || !value) return day
+
+  const date = new Date(value)
+  const pad = (part: number) => String(part).padStart(2, "0")
+  return `${day}, ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}

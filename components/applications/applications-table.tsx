@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { Eye } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -19,13 +20,11 @@ import { formatDate, formatMoney } from "@/lib/format"
 type ApplicationsTableProps = {
   applications: ApplicationRecord[]
   loading: boolean
-  onView: (application: ApplicationRecord) => void
 }
 
 export function ApplicationsTable({
   applications,
   loading,
-  onView,
 }: ApplicationsTableProps) {
   if (loading) {
     return (
@@ -108,15 +107,10 @@ export function ApplicationsTable({
                 {formatDate(app.created_at)}
               </TableCell>
               <TableCell className="text-right">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onView(app)}
-                  className="size-9 cursor-pointer"
-                  title="დეტალები"
-                  aria-label="დეტალები"
-                >
-                  <Eye className="size-4" />
+                <Button asChild variant="outline" size="icon" className="size-9" title="დეტალები">
+                  <Link href={`/dashboard/applications/${app.id}`} aria-label="დეტალები">
+                    <Eye className="size-4" />
+                  </Link>
                 </Button>
               </TableCell>
             </TableRow>
