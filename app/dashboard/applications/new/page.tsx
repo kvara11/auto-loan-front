@@ -1,10 +1,10 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
-import { ApplicationFormPage } from "@/components/applications/application-form"
+import { ApplicationWizard } from "@/components/application-wizard/application-wizard"
 
 export default function NewApplicationPage() {
   return (
     <DashboardShell title="ახალი განაცხადი" breadcrumb={{ label: "განაცხადები", href: "/dashboard/applications" }}>
-      <ApplicationFormPage />
+      <ApplicationWizard />
     </DashboardShell>
   )
 }

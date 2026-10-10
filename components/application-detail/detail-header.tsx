@@ -1,25 +1,25 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Pencil } from "lucide-react"
 
 import { type ApplicationAction, type ApplicationRecord } from "@/components/applications/applications-types"
 import { StatusBadge } from "@/components/applications/status-badge"
 import { ACTION_ORDER, ACTIONS } from "@/components/application-detail/action-config"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 
 type DetailHeaderProps = {
   app: ApplicationRecord
   actions: ApplicationAction[]
+  // From the backend: the officer's own Draft/Returned application.
+  canEdit: boolean
   onAction: (action: ApplicationAction) => void
 }
 
-export function DetailHeader({ app, actions, onAction }: DetailHeaderProps) {
+export function DetailHeader({ app, actions, canEdit, onAction }: DetailHeaderProps) {
   const router = useRouter()
   const available = ACTION_ORDER.filter((action) => actions.includes(action))
-  // Editing a draft or a returned application comes with T-402.
-  const editable = app.status === "Draft" || app.status === "Returned"
 
   // Back to wherever the user came from (list, dashboard); a page opened directly goes to the list.
   const goBack = () => {
@@ -35,11 +35,12 @@ export function DetailHeader({ app, actions, onAction }: DetailHeaderProps) {
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {editable && actions.includes("submit") ? (
-          <Button variant="outline" className="h-10" disabled title="მალე">
-            <Pencil className="size-4" />
-            რედაქტირება
-            <Badge variant="info">მალე</Badge>
+        {canEdit ? (
+          <Button asChild variant="outline" className="h-10">
+            <Link href={`/dashboard/applications/${app.id}/edit`}>
+              <Pencil className="size-4" />
+              რედაქტირება
+            </Link>
           </Button>
         ) : null}
         {available.map((action) => {

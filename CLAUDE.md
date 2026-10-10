@@ -19,7 +19,7 @@ There is no test runner or test suite. `docs/test-scenarios.md` lists behavior-l
 
 A frontend-only admin dashboard for an auto-loan business, built with Next.js 16 App Router, React 19, Tailwind v4 and shadcn/ui. All data and auth live in a separate backend at `NEXT_PUBLIC_API_URL`, so this repo has almost no server logic.
 
-User-facing text is in Georgian. Write new labels, messages and zod validation errors in Georgian. Some screens are still partly English: the application detail page, the 404 page, parts of settings, the header title and the delete-user dialog.
+User-facing text is in Georgian. Write new labels, messages and zod validation errors in Georgian. Some screens may still have English leftovers: parts of settings and the delete-user dialog.
 
 ## Architecture
 
@@ -87,23 +87,17 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - **Detail page** `/dashboard/applications/[id]` (`components/application-detail/*`, the design's ApplicationDetail): `fetchApplication(id)` (`GET /api/applications/:id` → `data.application` + `data.actions`) and `fetchHistory(id)` (`GET …/history` → `data.history`). Layout `lg:grid-cols-[2fr_1fr]`: header (number, `StatusBadge`, action buttons), the return/reject reason banner (`DecisionBanner`), info cards კლიენტი / სესხის პირობები / ავტომობილი და შეფასება (`InfoCard`; "შემოსავალი" and "ყოველთვიური გადასახადი" are "—" + "მალე"), and on the right `LtvCard` (requested amount / market value, display only, limit = stored `max_ltv`), officer comment, `HistoryTimeline` (plus a "გადაწყვეტილების მოლოდინში" step while submitted). Not-found / out-of-scope shows the backend message with a link back to the list.
 - **Workflow actions:** the buttons are exactly the backend's `data.actions` (`submit` → "რისკებში გაგზავნა"; `return` / `reject` / `approve` → "დაბრუნება" / "უარყოფა" / "დამტკიცება"; config in `action-config.ts`). `ActionDialog` confirms, requires a comment for return/reject (shadcn `Textarea`), calls `performAction()` (`POST …/{action}` with `{ comment }`), then replaces the application and actions from the response, shows the backend message and reloads the history. 409/403/424 messages appear in the dialog banner. "რედაქტირება" is disabled with "მალე" until application editing (T-402).
 - **Status:** the list, dashboard and detail page use `StatusBadge`; history labels come from `getHistoryLabel()` in `lib/application-status.ts`; dates from `formatDate`/`formatDateTime`. The list's LTV shows "—" while the stored value is 0.
-- **New application** (`application-form.tsx`, ~1900 lines) has two steps:
-  1. **Client.** Look up the client by personal ID: with the search button, or automatically as soon as the field holds 11 digits (`PERSONAL_ID_PATTERN`). The lookup status becomes `existing` or `new`, and any lookup error is treated as `new`. "Next" then:
-     - skips the API when an existing client is unchanged,
-     - calls `PUT /api/clients/:id` when an existing client was edited (the backend rejects a changed `personal_id` with 424),
-     - otherwise calls `POST /api/clients` and stores the returned `clientId`.
-  2. **Application.** Collect income (employee, entrepreneur or lease items), the loan, the co-borrower or guarantor and the vehicle, then call `POST /api/applications`.
-- **Form internals:**
-  - It doesn't use react-hook-form. State is a single `useState` object with a hand-written `FormErrors` map. `validateStep1` and `validateStep2` only check that required fields are non-blank.
-  - The payload is the whole form object plus `client_id`. `toPayloadNumber` converts number fields: it strips commas and whitespace and turns empty or NaN values into `undefined`.
-  - LTV and the down-payment share are computed only for display. The backend returns its own `ltv` and `ltv_warning`.
-  - Makes, models, fuel types and transmissions come from the vehicle-options proxy. Models are filtered by `make_id` with strict equality.
-  - The legal-address "verify" and debtor-registry "check" buttons are client-side mocks that fill in fixed values.
-  - `translit`, `titleCase` and `validate()` are unused.
+- **New application / edit** (`components/application-wizard/*`, design NewApplicationWizard): `/dashboard/applications/new` and `/dashboard/applications/[id]/edit` render `<ApplicationWizard applicationId?>`. Layout `lg:grid-cols-[2fr_1fr]`: cards on the left, sticky `WizardSummary` ("შეჯამება": client, amount, market value, display LTV + the buttons) on the right (below on mobile).
+  1. **Step "კლიენტი"** (`client-lookup-card`, `client-details-card`): typing the 11th digit (or "ძებნა") calls `GET /api/clients/personal/:pid`; found → green "— მოიძებნა" banner with "სხვა კლიენტი", fields prefilled; 404 → "new client" notice. "შემდეგი →" validates (`clientErrors`) and saves the client through `useClientStep().save()`: unchanged existing client → no call, edited → `PUT /api/clients/:id`, new → `POST /api/clients`. Client fields include marital status, family members and the manual "იურიდიული მისამართი გადამოწმებულია" mark (the backend records who/when); the automatic check is "მალე".
+  2. **Step "სესხი და ავტომობილი"**: `IncomeCard` (type → employee / entrepreneur / lease panels, liabilities, additional income; debtor-registry check is "მალე"), `LoanCard` (monthly payment "მალე", down-payment share), `GuarantorCard`, `VehicleCard` (car_db selects; a new make clears the model), `AppraisalCard` (market value, comparables, max LTV, display LTV + over-limit warning, vehicle and officer comments).
+  - **Buttons:** "მონახაზად შენახვა" saves (POST, or PUT once the application exists) — partial data is fine — and opens the detail page. "გაგზავნა რისკებში" checks `clientErrors` + `submitErrors` (mirrors the backend's `REQUIRED_FOR_SUBMIT`), saves, then `performAction(id, "submit")`. Backend 424 errors land on their fields through `mapServerErrors` (`income.x` → `x`, lease items → the lease list) plus a banner.
+  - **Edit mode:** loads `GET /api/applications/:id`; `can_edit: false` → an explanation card instead of the form. The client is fixed (lookup locked, no "სხვა კლიენტი"); its details can still be edited.
+  - **Form model** (`wizard-form.ts`): flat strings/booleans/ids for every field; `wizard-payload.ts` builds the client body, the application body (empty → `null` so an edit can clear a field; incomes → the `income` snapshot) and `fromApplication()` for edit (0 amounts show as empty). Options with Georgian labels: `wizard-options.ts`. Field helpers: `form-field.tsx` (`Field`, `FormInput`, `FormSelect`, `FormCheckbox`; errors via `aria-invalid`).
+- **Detail page extras:** "რედაქტირება" links to `/edit` when `can_edit`; "შემოსავლები და ვალდებულებები" card from `income`; client card shows marital status, family members, both addresses (✓ when verified); history label `updated` → "რედაქტირებულია".
 
 ## Styling
 
-- **Design system:** "Auto Loan — Design System" (Claude Design canvas; brief in `docs/design-brief.md`). Deep-teal primary, warm neutrals, ink sidebar, `--radius: 0.65rem`. Being applied screen by screen: done — tokens, font, shell, login, dashboard; next — applications list/detail, the new-application wizard, users/branches/settings.
+- **Design system:** "Auto Loan — Design System" (Claude Design canvas; brief in `docs/design-brief.md`). Deep-teal primary, warm neutrals, ink sidebar, `--radius: 0.65rem`. Being applied screen by screen: done — tokens, font, shell, login, dashboard, applications list/detail, the new-application wizard; next — users/branches/settings.
 - **Tokens** (`app/globals.css`, OKLCH, `:root` light and `.dark`): the shadcn set plus `--success`, `--warning`, `--info` (+ `-foreground`), the five status tokens `--status-{draft,submitted,approved,rejected,returned}` (+ `-foreground`, and `--status-returned-text` for readable amber text) and shadows `--elevation-sm/md/lg` (exposed as `shadow-sm/md/lg`). All are registered in `@theme inline`, so `bg-success`, `text-status-approved`, `bg-status-draft` work. Use tokens, not `emerald-*`/`red-*`/`slate-*` palette classes.
 - **Font:** Noto Sans Georgian (variable, `next/font/google`, subsets `georgian` + `latin`) → `--font-noto-georgian` → `--font-sans`. `<html lang="ka">`. Put `tabular-nums` on money, dates and percentages.
 - **Status language:** `lib/application-status.ts` maps the backend strings (`Draft`, `Submitted to Risks`, `Approved`, `Rejected`, `Returned`) to a token key and Georgian label; render with `<StatusBadge status={…} short? />` (`components/applications/status-badge.tsx`: tinted pill + dot, never color alone). `Badge` has variants `draft|submitted|approved|rejected|returned|success|warning|info|destructive|inactive|outline`.
@@ -111,7 +105,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - **Not available yet:** features without a backend are shown disabled with a "მალე" badge (e.g. "პაროლი დაგავიწყდათ?", two dashboard KPIs) — never with invented numbers.
 - **Dark mode:** the `.dark` class on `<html>` with `@custom-variant dark (&:is(.dark *))`.
   - Login, dashboard, shell and settings use tokens only, so both themes work.
-  - The applications list and the users/branches tables use tokens too (container `overflow-hidden rounded-xl border bg-card shadow-sm`). The new-application form still hardcodes light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
+  - The applications list and the users/branches tables use tokens too (container `overflow-hidden rounded-xl border bg-card shadow-sm`). The application wizard and detail page use tokens only.
 - **shadcn components** (style `radix-nova`; add one with `npx shadcn add <name>`):
   - `dialog`, `alert-dialog` and `select` import `@radix-ui/react-*`; the rest import the `radix-ui` monopackage, which new adds use.
   - `Button` and `Input` default to `h-8`, so add `h-10` to meet the tap-target rule. `SelectTrigger` is already `h-10`.
@@ -119,7 +113,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - `Badge`: see Status language above. `Skeleton` (`components/ui/skeleton.tsx`) for loading states; `components/ui/loading.tsx` is a custom spinner.
   - The shadcn CLI once added an unrelated npm package `cn` and imported `cn` from it; after `npx shadcn add`, check `package.json` and keep `import { cn } from "@/lib/utils"`.
   - `Table` is restyled to the design: uppercase 12px muted headers, 14px cell padding, `hover:bg-muted` rows.
-  - `Textarea` (`components/ui/textarea.tsx`) is used by the workflow dialog. Not installed: Tabs (even though the rules name it), Switch, Tooltip and Toast. The application form still uses raw `<textarea>`s and a hand-made toast.
+  - `Textarea` (`components/ui/textarea.tsx`) is used by the workflow dialog and the wizard. Not installed: Tabs (even though the rules name it), Switch, Tooltip and Toast.
 - **Patterns to copy:**
   - Page title: pass `title` to `DashboardShell` (top bar). Section card: `rounded-xl border bg-card p-5 shadow-sm sm:p-[22px]` with an `h2.text-[17px] font-semibold`.
   - Field: `div.space-y-2` with a `Label` and an `Input className="h-10"`. Use react-hook-form's `Form*` components where possible, and rely on `aria-invalid` for error styling.
@@ -128,7 +122,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - Tables: wrap them in `rounded-xl border`, and hide secondary columns with `hidden md:table-cell` and its `lg:`/`xl:` variants (as in `applications-table.tsx`).
   - Links styled as buttons: `<Button asChild><Link …/></Button>`.
   - Merge classes with `cn()` from `@/lib/utils`.
-- **Oversized files:** several feature components are far past the 150-line guideline, such as `application-form.tsx` (~1900 lines) and `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
+- **Oversized files:** several feature components are far past the 150-line guideline, such as `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
 
 ## UI and coding rules
 

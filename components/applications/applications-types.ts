@@ -60,7 +60,15 @@ export type ApplicationRecord = {
     phone?: string | null
     email?: string | null
     address?: string | null
+    legal_address?: string | null
+    birth_date?: string | null
+    marital_status?: string | null
+    family_members?: number | null
+    legal_address_verified?: boolean
+    legal_address_verified_at?: string | null
   }
+  // Incomes and liabilities as assessed for this application (Q-16).
+  income?: ApplicationIncome | null
   officer: {
     id: number
     first_name: string
@@ -75,6 +83,28 @@ export type ApplicationAction = "submit" | "return" | "approve" | "reject"
 export type ApplicationDetails = {
   application: ApplicationRecord
   actions: ApplicationAction[]
+  // The officer may still edit it (own application, Draft or Returned).
+  can_edit: boolean
+}
+
+export type ApplicationIncome = {
+  source_type?: "employee" | "entrepreneur" | "lease" | null
+  existing_liabilities?: number | null
+  employer?: string | null
+  position?: string | null
+  work_experience_months?: number | null
+  monthly_income?: number | null
+  monthly_income_currency?: string | null
+  im_number?: string | null
+  work_field?: string | null
+  business_address?: string | null
+  entrepreneur_income?: number | null
+  entrepreneur_income_currency?: string | null
+  lease_items?: Array<{ address?: string | null; duration?: string | null; amount?: number | null; currency?: string | null; cadastral?: string | null }> | null
+  additional_income_enabled?: boolean | null
+  additional_income_type?: string | null
+  additional_income?: number | null
+  additional_income_currency?: string | null
 }
 
 // One loan_logs entry: `action` is "created" or an ApplicationAction.

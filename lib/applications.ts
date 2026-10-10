@@ -30,7 +30,7 @@ export async function fetchApplication(id: string | number): Promise<Application
   const response = await api.get<Partial<ApplicationDetails>>(`${APPLICATIONS_URL}/${id}`)
   if (!response.success || !response.data?.application) throw new Error(response.message || "განაცხადი ვერ მოიძებნა")
 
-  return { application: response.data.application, actions: response.data.actions ?? [] }
+  return toDetails(response.data as ApplicationDetails)
 }
 
 export async function fetchHistory(id: string | number): Promise<HistoryEntry[]> {
@@ -47,7 +47,28 @@ export async function performAction(
   const response = await api.post<Partial<ApplicationDetails>>(`${APPLICATIONS_URL}/${id}/${action}`, comment ? { comment } : {})
   if (!response.success || !response.data?.application) throw new Error(response.message || "ქმედება ვერ შესრულდა")
 
-  return { application: response.data.application, actions: response.data.actions ?? [], message: response.message }
+  return { ...toDetails(response.data as ApplicationDetails), message: response.message }
+}
+
+// Create (POST, id null) or edit (PUT) an application; returns the saved application with its id.
+export async function saveApplication(id: number | null, payload: Record<string, unknown>) {
+  const response = id
+    ? await api.put<{ application?: ApplicationRecord }>(`${APPLICATIONS_URL}/${id}`, payload)
+    : await api.post<{ application?: ApplicationRecord }>(APPLICATIONS_URL, payload)
+  if (!response.success || !response.data?.application) throw new Error(response.message || "განაცხადის შენახვა ვერ მოხერხდა")
+
+  return response.data.application
+}
+
+function toDetails(data: ApplicationDetails): ApplicationDetails {
+  return { application: data.application, actions: data.actions ?? [], can_edit: Boolean(data.can_edit) }
+}
+
+// Display only (the backend doesn't compute LTV yet, T-404): requested amount / market value × 100.
+export function displayLtv(requested: string | number | null | undefined, marketValue: string | number | null | undefined) {
+  const market = Number(marketValue)
+  const amount = Number(requested)
+  return Number.isFinite(market) && market > 0 && Number.isFinite(amount) ? (amount / market) * 100 : null
 }
 
 // "ე. გელაშვილი"

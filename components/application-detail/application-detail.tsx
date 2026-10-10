@@ -8,6 +8,7 @@ import { ActionDialog } from "@/components/application-detail/action-dialog"
 import { DecisionBanner, OfficerComment } from "@/components/application-detail/decision-note"
 import { DetailHeader } from "@/components/application-detail/detail-header"
 import { ClientCard, LoanCard, VehicleCard } from "@/components/application-detail/detail-sections"
+import { IncomeInfoCard } from "@/components/application-detail/income-info-card"
 import { HistoryTimeline } from "@/components/application-detail/history-timeline"
 import { LtvCard } from "@/components/application-detail/ltv-card"
 import { FormNotice } from "@/components/settings/settings-section"
@@ -72,17 +73,18 @@ export function ApplicationDetail({ id }: { id: string }) {
     )
   }
 
-  const { application: app, actions } = details
+  const { application: app, actions, can_edit: canEdit } = details
 
   return (
     <div className="flex flex-col gap-5">
-      <DetailHeader app={app} actions={actions} onAction={(action) => { setNotice(undefined); setDialogAction(action) }} />
+      <DetailHeader app={app} actions={actions} canEdit={canEdit} onAction={(action) => { setNotice(undefined); setDialogAction(action) }} />
       {notice ? <FormNotice tone="success">{notice}</FormNotice> : null}
       <DecisionBanner app={app} />
 
       <div className="grid items-start gap-5 lg:grid-cols-[2fr_1fr]">
         <div className="flex min-w-0 flex-col gap-5">
           <ClientCard app={app} />
+          <IncomeInfoCard app={app} />
           <LoanCard app={app} />
           <VehicleCard app={app} />
         </div>

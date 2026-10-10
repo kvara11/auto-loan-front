@@ -181,7 +181,7 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 
 11. **Load.** Skeleton, then `GET /api/applications/:id` (`data.application`, `data.actions`) and `GET …/history` → header "განაცხადი <number>" + status badge, three info cards, LTV, officer comment and history.
 12. **Not found / out of scope.** Another officer's application, or a Draft opened by a risk manager → the "განაცხადი ვერ მოიძებნა" card with a link back to the list; no data leaks.
-13. **"მალე" fields.** "შემოსავალი (თვიური)" and "ყოველთვიური გადასახადი" show "—" + "მალე"; "რედაქტირება" is disabled with "მალე". No invented numbers.
+13. **"მალე" fields.** "ყოველთვიური გადასახადი" shows "—" + "მალე". Monthly income comes from the "შემოსავლები და ვალდებულებები" card (income snapshot); unfilled amounts show "—", not "0 ₾". "რედაქტირება" appears only with `can_edit` (see §7). No invented numbers.
 14. **LTV card.** requested amount / market value (rounded). Over the stored `max_ltv` → red gauge and the "აჭარბებს ლიმიტს" text; no market value → "—"; no `max_ltv` → "მაქსიმალური LTV არ არის მითითებული."
 15. **History.** Entries oldest first with label, `ე. გვარი · DD.MM.YYYY, HH:MM` and the comment of return/reject; while "გაგზავნილია რისკებში" a dashed "გადაწყვეტილების მოლოდინში · რისკების განყოფილება" step ends the list.
 15a. **Back button.** The "← უკან" button at the right end of the header (after the action buttons) returns to the previous page (list or dashboard); a page opened directly (new tab, pasted URL) goes to `/dashboard/applications`.
@@ -189,7 +189,7 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 
 ### Workflow actions (buttons come from `data.actions`)
 
-17. **Officer, own Draft or Returned.** Only "რისკებში გაგზავნა" (+ disabled "რედაქტირება"). Confirm → "განაცხადი გაიგზავნა რისკებში." banner, badge "გაგზავნილია რისკებში", the button disappears, history gains "გაგზავნილია რისკებში".
+17. **Officer, own Draft or Returned.** "რედაქტირება" and "რისკებში გაგზავნა". Submitting an incomplete draft → the dialog shows the backend's 424 message (the missing fields). Confirm → "განაცხადი გაიგზავნა რისკებში." banner, badge "გაგზავნილია რისკებში", the button disappears, history gains "გაგზავნილია რისკებში".
 18. **Officer, Submitted / Approved / Rejected.** No action buttons.
 19. **Risk manager, Submitted.** "დაბრუნება", "უარყოფა", "დამტკიცება". Return or reject with an empty comment → the dialog shows "მიუთითეთ: …" and sends nothing; a backend 424 would show the same way.
 20. **Return.** With remarks → status "დაბრუნებული", the "დაბრუნების მიზეზი" banner under the header (the officer sees it too), history entry with the remarks. The officer can resubmit; the banner then disappears.
@@ -198,76 +198,51 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 23. **Stale page.** Two risk managers act on the same application: the second gets 409 "ეს ქმედება განაცხადის მიმდინარე სტატუსზე დაუშვებელია." in the dialog; reload shows the real state.
 24. **Super-admin on their own application.** The decision buttons are absent (backend SoD); a direct POST → 403.
 
-## 6. New application, step 1: client
+## 6. New application wizard, step 1: client
 
-File: `components/applications/application-form.tsx`.
+Files: `components/application-wizard/*` (`client-lookup-card.tsx`, `client-details-card.tsx`, `use-client-step.ts`, `use-application-wizard.ts`), `app/dashboard/applications/new/page.tsx`.
 
 ### Lookup
 
-1. **Empty personal ID.** Clicking lookup shows "კლიენტი ვერ მოიძებნა" and sends no request.
-1a. **Automatic lookup.** Typing the 11th digit (`/^\d{11}$/`) sends `GET /api/clients/personal/:pid` without clicking search; 10 digits, or 11 characters with a non-digit, send nothing. The field is read-only while the request runs, so the value can't change under it. Pasting a full ID also triggers it.
-2. **Client found.** `GET /api/clients/personal/:pid` returns a client with an `id` → the fields are filled where the backend value is non-empty. First name, last name and birth date become read-only, the "existing" badge appears, and the personal ID is locked.
-3. **Client not found.** `success: false`, or no client in the response → "client not found", status `new`, and the fields stay editable.
-4. **Lookup error.** A 500 or network error should show an error, not "new client".
-   **Known issue:** any error is silently treated as `new`, which can lead to a duplicate client being created.
-5. **Reset.** The X button clears the client fields, the status, the client id and the errors. It keeps the personal ID, which becomes editable again.
+1. **Digits only.** The personal ID field accepts digits only, at most 11; "ძებნა" is disabled until 11 digits.
+2. **Automatic lookup.** Typing the 11th digit sends `GET /api/clients/personal/:pid` once; the field is read-only while it runs.
+3. **Client found.** Green "<name> — მოიძებნა" banner; all client fields, marital status, family members and the address-verified mark are filled; the summary shows the name. "სხვა კლიენტი" clears the client fields and unlocks the personal ID.
+4. **Not found (404).** "კლიენტი ვერ მოიძებნა — შეავსეთ…" notice; the fields stay empty and editable; "სხვა ნომერი" resets.
+5. **Automatic address check.** "ავტომატური გადამოწმება" is disabled with "მალე"; the manual checkbox is saved and the backend records who/when.
 
-### "Next" button
+### "შემდეგი →"
 
-6. **Required fields.** Blank `personal_id`, `first_name`, `last_name`, `phone` or `birth_date` → "სავალდებულო ველი" under each field, and no API call. There are no format checks yet, for example for the 11-digit personal ID, the phone or the email.
-7. **Existing client, unchanged.** The form goes to step 2 without sending any request.
-8. **Existing client, edited.** `PUT /api/clients/:id` with the 10 client fields, `family_members` as a number → step 2. The backend stores names, birth date, contacts and addresses; `marital_status` and `family_members` are ignored (no columns yet). A client registered by another officer can be found and edited too (shared registry).
-8a. **Personal ID changed on an existing client.** The PUT returns 424 → the banner shows "პირადი ნომრის შეცვლა დაუშვებელია."
-9. **Update fails.** The PUT throws → an error banner, and the form stays on step 1. The PUT's `success` flag is not checked.
-10. **New client.** `POST /api/clients` → the form needs `success` and `data.client.id`, otherwise it shows an error banner. On success it stores the client id and goes to step 2.
-11. **Back after creating a client.** Going back from step 2 and pressing Next again should not create a second client.
-    **Known issue:** a second `POST /api/clients` is sent, because the status isn't changed to `existing` after the client is created.
-12. **Mocks.** The legal-address "verify" button and the debtor-registry "check" button currently fill in fixed values. Replace these scenarios when real integrations exist.
+6. **Validation.** Missing first/last name, birth date, phone, a personal ID that isn't 11 digits, or a malformed email → "სავალდებულო ველი" / message under the field; no request.
+7. **Existing client, unchanged.** Goes to step 2 without a request.
+8. **Existing client, edited.** `PUT /api/clients/:id` (marital status, family members included), then step 2. A 424 shows under the field and in the banner.
+9. **New client.** `POST /api/clients`, then step 2; going back and forward again doesn't create a second client.
 
-## 7. New application, step 2: loan, income and vehicle
+## 7. New application wizard, step 2, saving and editing
 
-File: `components/applications/application-form.tsx`.
+Files: `income-card.tsx`, `income-panels.tsx`, `lease-items.tsx`, `loan-card.tsx`, `guarantor-card.tsx`, `vehicle-card.tsx`, `appraisal-card.tsx`, `wizard-summary.tsx`, `wizard-payload.ts`, `wizard-validation.ts`, `app/dashboard/applications/[id]/edit/page.tsx`.
 
-### Vehicle options
+### Fields
 
-1. **Load.** `fetch("/api/stats/vehicle-options")` (a Next route handler) fills the make, model, fuel and transmission selects.
-2. **Load fails.** The selects stay empty with no message, and the error only goes to `console.error`. Decide whether the user should see an error.
-3. **Make → model.** Choosing a make shows only its models. Changing the make resets the model, and the model select stays disabled until a make is chosen.
-4. **ID types.** The backend's `make_id` values must have the same type as the selected make ID, because the filter uses strict equality. String IDs would match no models.
+10. **Income type.** დასაქმებული / მეწარმე / იჯარა switch their panels; lease rows can be added (max 20) and removed; "დამატებითი შემოსავალი" shows its fields; the debtor-registry check is "მალე".
+11. **Vehicle.** Makes, models, fuels and transmissions load from the vehicle-options proxy; the model select is disabled until a make is chosen and lists only that make's models; changing the make clears the model.
+12. **Display values.** Down-payment share "x.x% წილი"; LTV in the appraisal card and the summary (requested / market value); over the max LTV → red value and warning, saving is not blocked. Monthly payment is "— მალე".
+13. **Stepper.** Step 1 shows ✓ on step 2; "← წინა ნაბიჯი" returns to step 1 with the values kept.
 
-### Validation
+### Saving
 
-5. **Required fields.** `requested_amount`, `loan_term_months`, `annual_interest_rate`, `payment_day`, `car_year` and `market_value` must be filled, and a make and a model must be chosen. Every error should be visible.
-   **Known issue:** `payment_day` shows no error, and `car_year` and `market_value` only get a red border.
-6. **Payment day range.** A value outside 1–31 is blocked by the browser's own validation, because the form has no `noValidate`.
+14. **"მონახაზად შენახვა".** Works with any subset of step 2 (only the client is required) → detail page, status "მონახაზი", the income card shows what was typed.
+15. **"გაგზავნა რისკებში", incomplete.** Banner "შეავსეთ მონიშნული ველები…" and "სავალდებულო ველი" on amount, term, rate, payment day, make, model, year, fuel, transmission and market value; no request.
+16. **"გაგზავნა რისკებში", complete.** Saves, submits → detail page with "გაგზავნილია რისკებში".
+17. **Backend errors.** A 424 (e.g. engine 13.5, payment day 32) appears under the field (`income.*` keys under the income fields, lease errors under the list) with the backend's Georgian message.
+18. **Numbers.** "24,500" is accepted (commas and spaces stripped); empty fields are sent as `null`.
 
-### Conditional sections
+### Editing `/dashboard/applications/:id/edit`
 
-7. **Income type.** Switching the type shows the employee, entrepreneur or lease panel.
-8. **Lease items.** Items can be added, edited and removed. With none, the empty-state text is shown.
-9. **Toggles.** The "additional income" checkbox reveals its fields, and so does the co-borrower/guarantor checkbox.
-10. **Hidden fields.** Values from a panel that's no longer shown, such as an earlier income type or an unchecked co-borrower, should not be sent.
-    **Known issue:** the whole form object is sent, including those values.
-
-### Calculated values
-
-11. **Live LTV.** With a requested amount of 9000 and a market value of 10000, the LTV shows 90.0% in red with a warning, because it's above `max_ltv`. An empty `max_ltv` counts as 80. The LTV is not sent to the backend.
-12. **Down-payment share.** `down_payment / seller_price`, or `down_payment / (requested + down_payment)` when there's no seller price.
-
-### Payload
-
-13. **Number conversion.** `"1,000"` → `1000`. `"abc"` and empty values are left out of the payload. `work_experience_months` and the lease `duration` are sent as strings.
-    **Known issue:** `"12,5"` becomes `125`, because commas are stripped instead of read as a decimal separator.
-14. **VIN and plate.** Both are uppercased while typing, and the VIN is limited to 17 characters.
-
-### Submit
-
-15. **Missing client id.** Submitting without a client id shows the "client identifier not found" banner.
-15a. **Officer without a branch.** `POST /api/applications` → 400, and the banner shows "განაცხადის შესაქმნელად აქტიური ფილიალი უნდა გქონდეთ მინიჭებული. მიმართეთ ადმინისტრატორს."
-16. **Success.** `POST /api/applications` with the form, `client_id` and the converted numbers → a success toast, then a redirect to `/dashboard/applications` after 900 ms. The submit button should stay disabled until the redirect.
-    **Known issue:** the button is enabled again during those 900 ms, so the application can be submitted twice.
-17. **Failure.** `success: false` or a thrown error → a banner with the backend message or the Georgian fallback.
-18. **Back from step 2.** The values entered in step 2 are kept.
+19. **Entry.** "რედაქტირება" on the detail page appears only for the officer's own Draft or Returned application.
+20. **Prefill.** Every field, the income snapshot and the client are filled; amounts that are 0 show empty; the personal ID is locked and there's no "სხვა კლიენტი".
+21. **Not editable.** A submitted/decided application, another officer's (404) or a non-officer → an explanation card with "უკან", no form.
+22. **Save.** Changes → PUT → detail page; history gains "რედაქტირებულია" (not when nothing changed). A Returned application can be fixed and sent to risks again.
+23. **Layout.** 1440: cards + sticky summary; 375: one column, summary and buttons at the end, no sideways scroll; both themes readable (tokens only).
 
 ## 8. Vehicle-options route handler
 

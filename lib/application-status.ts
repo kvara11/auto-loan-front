@@ -29,6 +29,7 @@ export function getStatusInfo(status: string | null | undefined): StatusInfo {
 // History (loan_logs) action → timeline label.
 const HISTORY_LABELS: Record<string, string> = {
   created: "შექმნილია — მონახაზი",
+  updated: "რედაქტირებულია",
   submit: "გაგზავნილია რისკებში",
   return: "დაბრუნებულია ოფიცერთან",
   approve: "დამტკიცებულია",
