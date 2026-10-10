@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Noto_Sans_Georgian } from "next/font/google";
 import "./globals.css";
 import { ThemeSync } from "@/components/theme-sync";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+// Variable font with Georgian (Mkhedruli) and Latin glyphs; feeds --font-sans in globals.css.
+const notoSansGeorgian = Noto_Sans_Georgian({
+  variable: "--font-noto-georgian",
+  subsets: ["georgian", "latin"],
 });
 
 const geistMono = Geist_Mono({
@@ -15,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Auto Loan",
-  description: "Auto loan administration dashboard",
+  description: "ავტოსესხების გაცემა და მართვა",
 };
 
 export default function RootLayout({
@@ -25,8 +26,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="ka"
+      className={`${notoSansGeorgian.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ThemeSync />

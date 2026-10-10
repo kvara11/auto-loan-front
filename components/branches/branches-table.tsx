@@ -41,7 +41,7 @@ export function BranchesTable({ branches, loading, togglingId, onEdit, onToggleA
   }
 
   return (
-    <div className="rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>

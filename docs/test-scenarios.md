@@ -8,17 +8,17 @@ File paths are relative to the repo root. Backend endpoints are on `NEXT_PUBLIC_
 
 ## 1. Auth and session
 
-Files: `app/(auth)/login/page.tsx`, `lib/auth-storage.ts`, `lib/validations/auth.ts`, `components/dashboard/dashboard-header.tsx`, `components/dashboard/dashboard-shell.tsx`.
+Files: `app/(auth)/login/page.tsx`, `components/auth/login-form.tsx`, `components/auth/login-brand-pane.tsx`, `lib/auth-storage.ts`, `lib/validations/auth.ts`, `components/dashboard/user-menu.tsx`, `components/dashboard/dashboard-shell.tsx`.
 
 ### Login
 
 1. **Valid credentials.** `POST /api/auth/login` with `{ username, password, remember_me }` → the user is cached in `sessionStorage` and the app navigates to `/dashboard`.
 2. **Client-side validation.** An empty username, or a password shorter than 6 characters → Georgian field errors, and no request is sent.
-3. **Wrong credentials.** The backend rejects the login → the backend's `message` is shown, or the fallback "მომხმარებლის სახელი ან პაროლი არასწორია." The cached user is cleared.
+3. **Wrong credentials.** The backend rejects the login → a red banner with the backend's `message` ("მომხმარებელი ან პაროლი არასწორია."), both inputs get `aria-invalid`, the cached user is cleared.
+3a. **Layout.** From `lg`: brand pane on the left (≈46%, gradient, "ავტოსესხების გაცემა და მართვა — ერთ სისტემაში", "© 2026 Qbind · შიდა სისტემა") and the 400px card on the right; below `lg` only the card with the "A Auto Loan" mark above it. Both themes use tokens. "პაროლი დაგავიწყდათ?" is not clickable and carries a "მალე" badge. The submit button shows a spinner and "შესვლა..." while sending.
 4. **Already logged in.** Opening `/login` with a valid session cookie → `GET /api/auth/me` succeeds and the page redirects to `/dashboard` without showing the form.
 5. **`/me` fails.** `/me` returns 401 or a network error → the login form is shown.
-6. **`/me` returns 200 with no `user`.** The login form should be shown.
-   **Known issue:** the page stays on "Checking session..." forever.
+6. **`/me` returns 200 with no `user`.** The login form is shown (the spinner stops).
 7. **Remember me.** `remember_me: true` is sent to the backend. The client still caches the user only in `sessionStorage`, so a new tab starts with no cached user and calls `/me`.
 
 ### Register
@@ -29,12 +29,11 @@ Files: `app/(auth)/login/page.tsx`, `lib/auth-storage.ts`, `lib/validations/auth
 
 ### Logout and multiple tabs
 
-11. **Logout.** The avatar menu → Logout → `POST /api/auth/logout` → the cached user is cleared and the app goes to `/login`.
+11. **Logout.** The avatar menu → "გასვლა" → `POST /api/auth/logout` → the cached user is cleared and the app goes to `/login`.
 12. **Logout when the backend errors.** A 401 or 500 from logout → the cache is still cleared and the app still goes to `/login`.
 13. **Logout in another tab.** Logging out in tab B → tab A should end up on `/login`.
     **Known issue:** tab A only clears its cache. The shell calls `/me` again, gets a 401, and shows an empty sidebar on the same page.
-14. **Failed login in another tab.** A failed login in tab B should not affect tab A.
-    **Known issue:** any write to the sync key clears every other tab's cached user.
+14. **Other tabs.** Another tab drops its cached user only on logout (`<ts>:clear`) or when a different user id logs in; a failed login or the same user refreshing `/me` in another tab has no effect (this used to loop: thousands of `/api/auth/me` requests).
 
 ### Route access and session expiry
 
@@ -42,27 +41,36 @@ Files: `app/(auth)/login/page.tsx`, `lib/auth-storage.ts`, `lib/validations/auth
     **Known issue:** there is no route guard. The page renders with an empty sidebar, and its API calls fail.
 16. **Cookie expires while a user is cached.** The next API call should send the user to `/login`.
     **Known issue:** there is no 401 interceptor, and the shell doesn't call `/me` when a user is cached. The sidebar keeps showing stale modules.
-17. **Storage keys.** In DevTools, the `sessionStorage` key for the cached user should match `AUTH_USER_KEY`.
-    **Known issue:** both keys are `""` in the browser, because `AUTH_USER_KEY` and `AUTH_SYNC_KEY` lack the `NEXT_PUBLIC_` prefix.
+17. **Storage keys.** DevTools shows `sessionStorage["auto-loan.auth-user"]` and `localStorage["auto-loan.auth-sync"]`.
 
 ## 2. Dashboard shell and navigation
 
 Files: `components/dashboard/*`, `app/not-found.tsx`.
 
 1. **Active modules.** Only modules with `is_active: true` are shown, ordered by `sort_order`, at every level of the tree.
-2. **Group modules.** A module with children and no `route` renders as an uppercase group label followed by its children. The label is hidden when the sidebar is collapsed.
+2. **Group modules.** A module with children and no `route` renders as an uppercase group label ("ოპერაციები", "ადმინისტრაცია") followed by its children; collapsed, the label becomes a thin divider.
+2a. **Active link.** The current page's link has the accent background and a teal bar on the left; `/dashboard/applications/123` keeps "განაცხადები" active, "დეშბორდი" is active only on `/dashboard`.
 3. **Module with a route and children.** It renders as a single link, and its children are not shown. This is current behavior; confirm with the backend whether that's intended.
 4. **Unknown icon.** An `icon` value missing from `iconMap` renders the `Circle` icon.
 5. **No route.** A module with no route and no children links to `/dashboard`.
-6. **Collapse toggle.** The sidebar narrows from `w-64` to `w-18` and the labels hide. The state should persist across navigation.
+6. **Collapse toggle.** "ჩაკეცვა" at the bottom narrows the sidebar from 252px to 76px; labels hide and each icon gets a tooltip. The state should persist across navigation.
    **Known issue:** the toggle isn't saved, and each page mounts a new shell, so navigating expands the sidebar again.
 7. **Reload while collapsed.** With `localStorage["auto-loan.sidebar-collapsed"] = "true"`, the sidebar should load collapsed with no warnings.
    **Known issue:** the server renders it expanded, so React logs a hydration mismatch and the width snaps.
-8. **Collapsed with nested modules.** The icons should be centered.
-   **Known issue:** `pl-4` overrides `px-0`, so nested icons sit off-centre.
+8. **Collapsed with nested modules.** The icons are centered.
 9. **Mobile navigation.** Below `lg`, the hamburger opens a left `Sheet` with the full sidebar, and tapping a link closes it.
-10. **Header menu.** The avatar menu → Settings opens `/settings`.
-11. **Unknown URL.** The 404 page renders inside the dashboard shell.
+10. **Top bar.** Shows the page title (and "განაცხადები /" breadcrumb on the detail and new-application pages). The avatar shows the user's initials; its menu shows name, role · branch, "პარამეტრები" (→ `/settings`) and "გასვლა".
+10a. **Theme toggle.** ☀/☾ switches the theme at once, saves it (`PUT /api/settings/preferences`) and keeps it after a reload; the settings page shows the same value.
+11. **Unknown URL.** The 404 page ("გვერდი ვერ მოიძებნა", link back to the dashboard) renders inside the dashboard shell.
+
+### Dashboard (`components/dashboard-home/*`)
+
+12. **Officer** (`credit.officer`): KPIs — "მიმდინარე სესხები" and "თვის გაცემები" show "—" + "მალე", "დამუშავების პროცესში" shows the number of own Draft/Submitted/Returned applications; status bars count own applications; "ჩემი მონახაზები" lists own Draft/Returned (max 5); "ბოლო განაცხადები" the latest 5.
+13. **Risk manager**: the role block is "რიგი — გაგზავნილი განაცხადები" (Submitted to Risks only); counts cover non-Draft applications of every branch.
+14. **Branch manager / auditor**: no role block; counts cover their scope.
+15. **Administrator**: no application blocks; two cards with user and branch counts that link to the admin pages.
+16. **States**: skeleton while loading; the API error in a red banner; with no applications the recent list says "განაცხადები ვერ მოიძებნა".
+17. **Mobile (375px)**: KPIs stack as rows, the recent list becomes compact rows (number · client, amount · car, status); no horizontal scroll.
 
 ## 3. Settings
 
@@ -188,6 +196,7 @@ File: `components/applications/application-form.tsx`.
 ### Lookup
 
 1. **Empty personal ID.** Clicking lookup shows "კლიენტი ვერ მოიძებნა" and sends no request.
+1a. **Automatic lookup.** Typing the 11th digit (`/^\d{11}$/`) sends `GET /api/clients/personal/:pid` without clicking search; 10 digits, or 11 characters with a non-digit, send nothing. The field is read-only while the request runs, so the value can't change under it. Pasting a full ID also triggers it.
 2. **Client found.** `GET /api/clients/personal/:pid` returns a client with an `id` → the fields are filled where the backend value is non-empty. First name, last name and birth date become read-only, the "existing" badge appears, and the personal ID is locked.
 3. **Client not found.** `success: false`, or no client in the response → "client not found", status `new`, and the fields stay editable.
 4. **Lookup error.** A 500 or network error should show an error, not "new client".

@@ -9,15 +9,8 @@ export default async function ApplicationDetailPage({ params }: ApplicationDetai
   const { id } = await params
 
   return (
-    <DashboardShell>
-      <section className="space-y-4">
-        <div className="space-y-1">
-          <h3 className="text-xl font-semibold tracking-tight sm:text-2xl">Application Details</h3>
-          <p className="text-muted-foreground text-sm sm:text-base">Review a single loan application.</p>
-        </div>
-
-        <ApplicationDetail id={id} />
-      </section>
+    <DashboardShell title="განაცხადის დეტალები" breadcrumb={{ label: "განაცხადები", href: "/dashboard/applications" }}>
+      <ApplicationDetail id={id} />
     </DashboardShell>
   )
 }

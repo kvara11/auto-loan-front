@@ -2,8 +2,10 @@
 
 import { useSyncExternalStore } from "react"
 
-const AUTH_USER_KEY = process.env.AUTH_USER_KEY || ""
-const AUTH_SYNC_KEY = process.env.AUTH_SYNC_KEY || ""
+// Plain constants: they are not secrets, and env vars without NEXT_PUBLIC_ are undefined in the browser.
+const AUTH_USER_KEY = "auto-loan.auth-user"
+// Cross-tab signal: `<timestamp>:<userId>` after a login/refresh, `<timestamp>:clear` after a logout.
+const AUTH_SYNC_KEY = "auto-loan.auth-sync"
 
 let cachedAuthUser: AuthUser | null = null
 let cachedAuthUserRaw = ""
@@ -25,19 +27,20 @@ export type AuthUser = {
     last_name: string
     username: string
     email: string
-    role: string
+    role: { id: number; name: string; display_name: string | null } | null
+    branch: { id: number; code: string; name: string } | null
     permissions: string[]
     modules: AppModule[]
 }
 
-export function saveAuthUser(user: AuthUser, rememberMe = false) {
+export function saveAuthUser(user: AuthUser) {
     if (typeof window === "undefined") return
     const raw = JSON.stringify(user)
     cachedAuthUser = user
     cachedAuthUserRaw = raw
 
     window.sessionStorage.setItem(AUTH_USER_KEY, raw)
-    window.localStorage.setItem(AUTH_SYNC_KEY, `${Date.now()}:${rememberMe ? "1" : "0"}`)
+    window.localStorage.setItem(AUTH_SYNC_KEY, `${Date.now()}:${user.id}`)
 
     window.dispatchEvent(new Event("auth-user-change"))
 }
@@ -74,8 +77,15 @@ export function clearAuthUser() {
     window.dispatchEvent(new Event("auth-user-change"))
 }
 
+// Another tab logged out, or logged in as a different account: drop our cached user so the
+// shell refetches /api/auth/me. The same user refreshing in another tab is ignored; clearing
+// on every write made two open tabs refetch each other's user in an endless loop.
 function handleStorageEvent(event: StorageEvent, callback: () => void) {
     if (event.key !== AUTH_SYNC_KEY) return
+
+    const signal = event.newValue?.split(":")[1]
+    const current = getAuthUser()
+    if (signal !== "clear" && current && String(current.id) === signal) return
 
     window.sessionStorage.removeItem(AUTH_USER_KEY)
     cachedAuthUser = null

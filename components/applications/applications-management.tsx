@@ -5,7 +5,6 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { api, getApiErrorMessage } from "@/lib/axios"
 import { useAuthUser } from "@/lib/auth-storage"
 import { type ApplicationRecord } from "@/components/applications/applications-types"
@@ -85,29 +84,17 @@ export function ApplicationsManagement() {
         </div>
       ) : null}
 
-      <Card className="border-none shadow-none bg-transparent">
-        <CardContent className="p-0">
-          {error ? (
-            <div className="rounded-xl border border-dashed px-6 py-10 text-center bg-white shadow-sm">
-              <p className="text-base font-medium sm:text-lg text-red-600">შეცდომა</p>
-              <p className="text-muted-foreground mt-2 text-sm sm:text-base">{error}</p>
-              <Button 
-                variant="outline" 
-                className="mt-4"
-                onClick={() => window.location.reload()}
-              >
-                თავიდან ცდა
-              </Button>
-            </div>
-          ) : (
-            <ApplicationsTable 
-              applications={applications} 
-              loading={loading} 
-              onView={handleViewDetails}
-            />
-          )}
-        </CardContent>
-      </Card>
+      {error ? (
+        <div className="rounded-xl border border-dashed bg-card px-6 py-10 text-center">
+          <p className="text-base font-medium text-destructive sm:text-lg">შეცდომა</p>
+          <p className="mt-2 text-sm text-muted-foreground sm:text-base">{error}</p>
+          <Button variant="outline" className="mt-4 h-10" onClick={() => window.location.reload()}>
+            თავიდან ცდა
+          </Button>
+        </div>
+      ) : (
+        <ApplicationsTable applications={applications} loading={loading} onView={handleViewDetails} />
+      )}
 
       <ApplicationDetailsDialog
         application={selectedApplication}

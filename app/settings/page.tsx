@@ -3,7 +3,7 @@ import { SettingsPage as SettingsContent } from "@/components/settings/settings-
 
 export default function SettingsPage() {
     return (
-        <DashboardShell>
+        <DashboardShell title="პარამეტრები">
             <SettingsContent />
         </DashboardShell>
     )

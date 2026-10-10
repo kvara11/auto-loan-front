@@ -38,21 +38,23 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - `/` redirects to `/login`. The login page calls `/api/auth/me` first and goes straight to `/dashboard` if a session already exists. There is no `/register` page and no self-registration: the backend creates users only through the admin endpoint `POST /api/admin/users` (`users.manage`), which the users screen doesn't call yet.
 - `lib/auth-storage.ts` caches the backend's `AuthUser` (including `permissions` and `modules`) in `sessionStorage`, and `useAuthUser()` reads it through `useSyncExternalStore`.
   - `remember_me` is only sent to the backend. The user is always cached in `sessionStorage`, so every new tab fetches `/api/auth/me` again.
-  - Cross-tab sync works through `localStorage[AUTH_SYNC_KEY]`. Any write to it fires a `storage` event, and other tabs clear their cached user when they see it. That includes writes from logins, failed logins, logouts and settings saves.
-- Gotcha: `lib/auth-storage.ts` is a client module, but it reads `AUTH_USER_KEY` and `AUTH_SYNC_KEY`, which lack the `NEXT_PUBLIC_` prefix. They are therefore undefined in the browser, and both storage keys end up as `""`.
+  - The storage keys are plain constants (`auto-loan.auth-user` in `sessionStorage`, `auto-loan.auth-sync` in `localStorage`), not env vars. The old `AUTH_USER_KEY`/`AUTH_SYNC_KEY` entries in `.env` are unused.
+  - Cross-tab sync: `saveAuthUser()` writes `<timestamp>:<userId>` and `clearAuthUser()` writes `<timestamp>:clear` to the sync key. Another tab drops its cached user (and the shell refetches `/api/auth/me`) only on `clear` or when the user id differs from its own. **Don't clear on every write:** the shell's `/me` refetch calls `saveAuthUser()`, so two open tabs then refetched each other's user forever (thousands of `/api/auth/me` requests). A name change in one tab shows in other tabs only after a reload.
 
 ### Dashboard shell and navigation
 
 - Authenticated pages have no shared `layout.tsx`. Each page (`app/dashboard/**`, `app/settings`, `app/not-found.tsx`) wraps its own content in `<DashboardShell>`. Dashboard pages are thin server components, and the feature UI lives in `components/<feature>/` as client components.
 - Because every page mounts its own shell, shell state resets on each navigation. That includes the sidebar's collapsed state.
-- `DashboardShell` provides the mobile sidebar `Sheet`, the content padding and the `max-w-7xl` container, so pages don't add them.
+- `DashboardShell` provides the mobile sidebar `Sheet`, the content padding and the content container (`max-w-[90rem]`, 1440px; wider than the rules' `max-w-7xl` so tables fit), so pages don't add them. It takes a required `title` (shown in the top bar) and an optional `breadcrumb` (`{ label, href }`, e.g. "განაცხადები / ახალი განაცხადი"); pages don't render their own page heading.
+- Top bar (`dashboard-header.tsx`): hamburger (mobile), breadcrumb + title, `ThemeToggle` (☀/☾; applies at once, writes `localStorage` and saves `PUT /api/settings/preferences`), `UserMenu` (avatar initials; name, `role.display_name` · branch; "პარამეტრები", "გასვლა").
 - If no user is cached, `DashboardShell` fetches `/api/auth/me`.
 - The sidebar is built from `user.modules`, a backend-provided tree with `route`, `icon`, `sort_order`, `is_active` and `children` fields.
   - A module with children and no route renders as a group label.
   - A module with a route renders as a link, and any children it has are dropped.
   - A new page only shows up in the nav once the backend returns a module for it.
-  - The module's `icon` string must also have an entry in `iconMap` in `components/dashboard/dashboard-sidebar.tsx`, or it falls back to `Circle`.
-  - There is no active-link highlighting.
+  - The module's `icon` string must also have an entry in `iconMap` in `components/dashboard/sidebar-nav.tsx`, or it falls back to `Circle`.
+  - The active link (`usePathname`; `/dashboard` exact, other routes also match their sub-pages) gets `bg-sidebar-accent` and a `sidebar-primary` bar. The sidebar uses the ink `--sidebar` tokens in both themes; collapsed it shows icons only (with `title`/`aria-label`).
+- **Dashboard** (`components/dashboard-home/*`): reads `GET /api/applications` (already scoped by the backend). KPI "დამუშავების პროცესში" is real (Draft + Submitted + Returned); "მიმდინარე სესხები" and "თვის გაცემები" show "—" + "მალე" until loans/disbursements exist. Status bars, a role block ("ჩემი მონახაზები" for `applications.create`, "რიგი — გაგზავნილი განაცხადები" for `applications.view.submitted`), "ბოლო განაცხადები" (table from `md`, rows on mobile). Users without any `applications.view.*` (administrator) get `AdminOverview` (user and branch counts) instead.
 
 ### Settings and preferences
 
@@ -83,9 +85,9 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 - **List:** `GET /api/applications`, where `data` is either an array or `{ applications }`. The backend returns only the user's scope (officer: own; branch manager: branch; risk manager: non-Draft; auditor: all; administrator: 401). The officer line in the table also shows the application's branch. The eye button opens `application-details-dialog.tsx`, which fetches `GET /api/applications/:id` and reads `data.application`.
 - **Detail page:** `/dashboard/applications/[id]` (`application-detail.tsx`) calls the same endpoint but treats `data` as a flat `ApplicationDetailRecord` (`client_name`, `personal_id`, ...). Nothing links to this page and it is English-only. Check the real backend response before building on either shape.
-- **Status:** the raw backend string, shown untranslated. The table colors "Draft", "Approved" and "Rejected". The date and money formatters are copied separately into the table, the dialog and the detail page.
+- **Status:** the list table uses `StatusBadge` and the shared `lib/format.ts` formatters; LTV shows "—" while the stored value is 0. The dialog and the detail page still show the raw status string and keep their own formatter copies.
 - **New application** (`application-form.tsx`, ~1900 lines) has two steps:
-  1. **Client.** Look up the client by personal ID. The lookup status becomes `existing` or `new`, and any lookup error is treated as `new`. "Next" then:
+  1. **Client.** Look up the client by personal ID: with the search button, or automatically as soon as the field holds 11 digits (`PERSONAL_ID_PATTERN`). The lookup status becomes `existing` or `new`, and any lookup error is treated as `new`. "Next" then:
      - skips the API when an existing client is unchanged,
      - calls `PUT /api/clients/:id` when an existing client was edited (the backend rejects a changed `personal_id` with 424),
      - otherwise calls `POST /api/clients` and stores the returned `clientId`.
@@ -100,19 +102,25 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ## Styling
 
-- **Tokens** (`app/globals.css`): a neutral oklch palette in `:root` and `.dark`, mapped through `@theme inline`. Tailwind v4 has no `tailwind.config`. The only colored token is `--destructive`. There are no success, warning or info tokens, which is why feature code uses `emerald-*`, `red-*` and `amber-*` palette classes. When a status color is needed, prefer adding a token.
-- **Fonts are broken:** `globals.css` sets `--font-sans: var(--font-sans)`, which refers to itself, while `layout.tsx` defines `--font-geist-sans`. Geist is therefore never applied, and pages render in the browser's default font. Geist also has no Georgian glyphs (`subsets: ["latin"]`), so Georgian text always comes from an OS fallback font. `<html lang="en">` should be `ka`.
+- **Design system:** "Auto Loan — Design System" (Claude Design canvas; brief in `docs/design-brief.md`). Deep-teal primary, warm neutrals, ink sidebar, `--radius: 0.65rem`. Being applied screen by screen: done — tokens, font, shell, login, dashboard; next — applications list/detail, the new-application wizard, users/branches/settings.
+- **Tokens** (`app/globals.css`, OKLCH, `:root` light and `.dark`): the shadcn set plus `--success`, `--warning`, `--info` (+ `-foreground`), the five status tokens `--status-{draft,submitted,approved,rejected,returned}` (+ `-foreground`, and `--status-returned-text` for readable amber text) and shadows `--elevation-sm/md/lg` (exposed as `shadow-sm/md/lg`). All are registered in `@theme inline`, so `bg-success`, `text-status-approved`, `bg-status-draft` work. Use tokens, not `emerald-*`/`red-*`/`slate-*` palette classes.
+- **Font:** Noto Sans Georgian (variable, `next/font/google`, subsets `georgian` + `latin`) → `--font-noto-georgian` → `--font-sans`. `<html lang="ka">`. Put `tabular-nums` on money, dates and percentages.
+- **Status language:** `lib/application-status.ts` maps the backend strings (`Draft`, `Submitted to Risks`, `Approved`, `Rejected`, `Returned`) to a token key and Georgian label; render with `<StatusBadge status={…} short? />` (`components/applications/status-badge.tsx`: tinted pill + dot, never color alone). `Badge` has variants `draft|submitted|approved|rejected|returned|success|warning|info|destructive|inactive|outline`.
+- **Formatters:** `lib/format.ts` (`formatMoney` → `24,500 ₾` / `$1,200`, `formatDate` → `08.10.2026`, never throws). `lib/applications.ts`: `fetchApplications()`, `shortName()` (`ე. გელაშვილი`), `vehicleLabel()`, `canViewApplications()`.
+- **Not available yet:** features without a backend are shown disabled with a "მალე" badge (e.g. "პაროლი დაგავიწყდათ?", two dashboard KPIs) — never with invented numbers.
 - **Dark mode:** the `.dark` class on `<html>` with `@custom-variant dark (&:is(.dark *))`.
-  - Login and settings have `dark:` variants.
-  - The applications feature (form, table, dialog) and the users table row buttons hardcode light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
+  - Login, dashboard, shell and settings use tokens only, so both themes work.
+  - The applications list and the users/branches tables use tokens too (container `overflow-hidden rounded-xl border bg-card shadow-sm`). The new-application form and the details dialog still hardcode light colors such as `bg-white`, `text-slate-800` and `bg-*-100`, with no dark variants.
 - **shadcn components** (style `radix-nova`; add one with `npx shadcn add <name>`):
   - `dialog`, `alert-dialog` and `select` import `@radix-ui/react-*`; the rest import the `radix-ui` monopackage, which new adds use.
   - `Button` and `Input` default to `h-8`, so add `h-10` to meet the tap-target rule. `SelectTrigger` is already `h-10`.
   - `Checkbox` wraps a native `<input type="checkbox">`, so it takes `onChange`, not `onCheckedChange`.
-  - `Badge` adds `success` and `inactive` variants. `components/ui/loading.tsx` is a custom spinner.
+  - `Badge`: see Status language above. `Skeleton` (`components/ui/skeleton.tsx`) for loading states; `components/ui/loading.tsx` is a custom spinner.
+  - The shadcn CLI once added an unrelated npm package `cn` and imported `cn` from it; after `npx shadcn add`, check `package.json` and keep `import { cn } from "@/lib/utils"`.
+  - `Table` is restyled to the design: uppercase 12px muted headers, 14px cell padding, `hover:bg-muted` rows.
   - Not installed: Tabs (even though the rules name it), Textarea, Switch, Tooltip and Toast. The application form uses raw `<textarea>`s and a hand-made toast.
 - **Patterns to copy:**
-  - Page header: `div.space-y-1` + `h3.text-xl font-semibold tracking-tight sm:text-2xl`. With an action button, wrap both in `flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between`.
+  - Page title: pass `title` to `DashboardShell` (top bar). Section card: `rounded-xl border bg-card p-5 shadow-sm sm:p-[22px]` with an `h2.text-[17px] font-semibold`.
   - Field: `div.space-y-2` with a `Label` and an `Input className="h-10"`. Use react-hook-form's `Form*` components where possible, and rely on `aria-invalid` for error styling.
   - Error banner: `rounded-lg border border-destructive/30 bg-destructive/10 text-destructive` (as in `FormNotice` in `components/settings/settings-section.tsx`).
   - Empty or loading block: `flex min-h-65 items-center justify-center rounded-xl border border-dashed` (as in `users-table.tsx`).

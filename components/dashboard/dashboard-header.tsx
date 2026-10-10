@@ -1,92 +1,43 @@
 "use client"
 
-import { Menu, User } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
-import { isAxiosError } from "axios"
+import Link from "next/link"
+import { Menu } from "lucide-react"
 
-import { clearAuthUser } from "@/lib/auth-storage"
-import { api } from "@/lib/axios"
-import { API_ROUTES } from "@/lib/routes"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { ThemeToggle } from "@/components/dashboard/theme-toggle"
+import { UserMenu } from "@/components/dashboard/user-menu"
 import { Button } from "@/components/ui/button"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
+export type Breadcrumb = { label: string; href: string }
 
 type DashboardHeaderProps = {
-    onOpenMobileMenu: () => void
+  title: string
+  breadcrumb?: Breadcrumb
+  onOpenMobileMenu: () => void
 }
 
-export function DashboardHeader({ onOpenMobileMenu }: DashboardHeaderProps) {
-    const router = useRouter()
-    const [isLoggingOut, setIsLoggingOut] = useState(false)
+export function DashboardHeader({ title, breadcrumb, onOpenMobileMenu }: DashboardHeaderProps) {
+  return (
+    <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b bg-card px-4 sm:px-6 lg:px-7">
+      <div className="flex min-w-0 items-center gap-2">
+        <Button variant="ghost" size="icon" className="size-10 lg:hidden" aria-label="მენიუ" onClick={onOpenMobileMenu}>
+          <Menu className="size-5" />
+        </Button>
 
-    const handleLogout = async () => {
-        if (isLoggingOut) return
+        {breadcrumb ? (
+          <>
+            <Link href={breadcrumb.href} className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline">
+              {breadcrumb.label}
+            </Link>
+            <span className="hidden text-sm text-muted-foreground sm:inline" aria-hidden="true">/</span>
+          </>
+        ) : null}
+        <h1 className="truncate text-base font-semibold sm:text-[17px]">{title}</h1>
+      </div>
 
-        setIsLoggingOut(true)
-
-        try {
-            await api.post(API_ROUTES.auth.logout)
-        } catch (error: unknown) {
-            if (!isAxiosError(error) || error.response?.status !== 401) {
-                console.error("Logout failed", error)
-            }
-        } finally {
-            clearAuthUser()
-            router.replace("/login")
-            router.refresh()
-            setIsLoggingOut(false)
-        }
-    }
-
-    return (
-        <header className="bg-background flex h-16 items-center justify-between border-b px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-2">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-10 lg:hidden"
-                    aria-label="Open navigation"
-                    onClick={onOpenMobileMenu}
-                >
-                    <Menu className="size-5" />
-                </Button>
-
-                <h1 className="text-sm font-semibold sm:text-base lg:text-lg">Dashboard</h1>
-            </div>
-
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="size-10" aria-label="Open user menu">
-                        <Avatar className="size-8">
-                            <AvatarFallback>
-                                <User className="size-4" />
-                            </AvatarFallback>
-                        </Avatar>
-                    </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" className="w-52">
-                    <DropdownMenuItem className="h-10 text-sm sm:text-base" onSelect={() => router.push("/settings")}>
-                        პარამეტრები
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        variant="destructive"
-                        className="h-10 text-sm sm:text-base"
-                        onClick={handleLogout}
-                        disabled={isLoggingOut}
-                    >
-                        {isLoggingOut ? "..." : "გასვლა"}
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </header>
-    )
+      <div className="flex shrink-0 items-center gap-3">
+        <ThemeToggle />
+        <UserMenu />
+      </div>
+    </header>
+  )
 }

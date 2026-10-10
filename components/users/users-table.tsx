@@ -61,7 +61,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
   }
 
   return (
-    <div className="rounded-xl border">
+    <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>
@@ -94,8 +94,9 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
                   <Button
                     type="button"
                     variant="outline"
-                    className="bg-yellow-100"
-                    size="sm"
+                    size="icon"
+                    className="size-9"
+                    aria-label="რედაქტირება"
                     onClick={() => onEdit(user)}
                     disabled={user.status !== "active"}
                   >
@@ -104,13 +105,13 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="icon"
                     onClick={() => onToggleStatus(user.id)}
                     aria-label={user.status === "active" ? "გაუქმება" : "აღდგენა"}
                     disabled={togglingUserId === user.id}
-                    className={`${user.status === "active" ? "bg-red-100" : "bg-green-100"}`}
+                    className={`size-9 ${user.status === "active" ? "text-destructive hover:text-destructive" : "text-success hover:text-success"}`}
                   >
-                    <Power className='size-3.5 text-back' />
+                    <Power className="size-3.5" />
                   </Button>
                   {/* <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(user)} aria-label="Delete user">
                     <Trash2 className="size-3.5" />

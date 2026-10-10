@@ -135,6 +135,9 @@ type VehicleOptions = {
   transmissions: VehicleOption[];
 };
 
+// A Georgian personal ID: exactly 11 digits. Typing the 11th digit starts the client lookup.
+const PERSONAL_ID_PATTERN = /^\d{11}$/;
+
 type ClientLookup = Partial<ApplicationForm> & {
   id?: string | number;
 };
@@ -398,8 +401,9 @@ export function ApplicationFormPage() {
     return (req / mv) * 100;
   }, [form.requested_amount, form.market_value]);
 
-  const handleLookup = async () => {
-    if (!form.personal_id.trim()) {
+  // Called by the search button, and automatically once the field holds a full 11-digit personal ID.
+  const handleLookup = async (personalId = form.personal_id) => {
+    if (!personalId.trim()) {
       setLookupError("კლიენტი ვერ მოიძებნა");
       return;
     }
@@ -409,7 +413,7 @@ export function ApplicationFormPage() {
 
     try {
       const response = await api.get<{ client?: ClientLookup }>(
-        `/api/clients/personal/${encodeURIComponent(form.personal_id)}`,
+        `/api/clients/personal/${encodeURIComponent(personalId)}`,
       );
 
       if (!response.success || !response.data?.client) {
@@ -443,7 +447,7 @@ export function ApplicationFormPage() {
         birth_date: client.birth_date || "",
         marital_status: client.marital_status || "",
         family_members: client.family_members?.toString() || "",
-        personal_id: form.personal_id,
+        personal_id: personalId,
       });
 
       // Clear errors for fields that were populated
@@ -819,17 +823,22 @@ export function ApplicationFormPage() {
                       <Input
                         id="personal_id"
                         value={form.personal_id}
-                        onChange={(e) => updateField("personal_id", e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          updateField("personal_id", value);
+                          if (PERSONAL_ID_PATTERN.test(value)) void handleLookup(value);
+                        }}
                         placeholder="11 ნიშნა ნომერი"
                         maxLength={11}
-                        readOnly={clientLookupStatus !== "idle"}
+                        inputMode="numeric"
+                        readOnly={clientLookupStatus !== "idle" || lookupLoading}
                         className={cn(errors.personal_id && "border-red-500", clientLookupStatus !== "idle" && "bg-slate-50")}
                       />
                       {clientLookupStatus === "idle" ? (
                         <Button
                           type="button"
                           size="icon"
-                          onClick={handleLookup}
+                          onClick={() => void handleLookup()}
                           disabled={lookupLoading}
                         >
                           {lookupLoading ? (

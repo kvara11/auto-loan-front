@@ -1,20 +1,20 @@
+import Link from "next/link";
+import { FileQuestion } from "lucide-react";
+
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <DashboardShell>
-      <section className="flex min-h-[calc(100vh-8rem)] items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <p className="text-muted-foreground text-sm font-medium uppercase tracking-[0.2em]">
-            404
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            Page not found
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            The page you are looking for does not exist or has been moved.
-          </p>
-        </div>
+    <DashboardShell title="გვერდი ვერ მოიძებნა">
+      <section className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
+        <FileQuestion className="size-10 text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm font-semibold tracking-[0.2em] text-muted-foreground">404</p>
+        <h2 className="text-xl font-bold sm:text-2xl">გვერდი ვერ მოიძებნა</h2>
+        <p className="max-w-md text-sm text-muted-foreground">მოთხოვნილი გვერდი არ არსებობს, გადატანილია ან მასზე წვდომა არ გაქვთ.</p>
+        <Button asChild className="mt-2 h-10">
+          <Link href="/dashboard">დეშბორდზე დაბრუნება</Link>
+        </Button>
       </section>
     </DashboardShell>
   );

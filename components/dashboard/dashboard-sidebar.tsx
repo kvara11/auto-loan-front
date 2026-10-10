@@ -1,147 +1,70 @@
 "use client"
 
-import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
-import {
-    BadgeCheck,
-    BriefcaseBusiness,
-    Building2,
-    Car,
-    ChartBar,
-    CheckCheck,
-    Circle,
-    KeyRound,
-    LayoutDashboard,
-    Menu,
-    Settings,
-    Shield,
-    Users,
-} from "lucide-react"
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { SidebarNav } from "@/components/dashboard/sidebar-nav"
 import { type AppModule } from "@/lib/auth-storage"
 import { cn } from "@/lib/utils"
 
 type DashboardSidebarProps = {
-    modules: AppModule[]
-    collapsed: boolean
-    onToggle: () => void
-    onNavigate?: () => void
-    hideToggle?: boolean
-    className?: string
+  modules: AppModule[]
+  collapsed: boolean
+  onToggle: () => void
+  onNavigate?: () => void
+  hideToggle?: boolean
+  className?: string
 }
 
-const iconMap: Record<string, LucideIcon> = {
-    "layout-dashboard": LayoutDashboard,
-    "briefcase-business": BriefcaseBusiness,
-    car: Car,
-    "chart-bar": ChartBar,
-    "check-check": CheckCheck,
-    shield: Shield,
-    users: Users,
-    "badge-check": BadgeCheck,
-    "key-round": KeyRound,
-    settings: Settings,
-    "building-2": Building2,
+export function BrandMark({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "flex size-[30px] shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-extrabold text-sidebar-primary-foreground",
+        className
+      )}
+    >
+      A
+    </div>
+  )
 }
 
-function getIcon(name: string) {
-    return iconMap[name] ?? Circle
-}
+export function DashboardSidebar({ modules, collapsed, onToggle, onNavigate, hideToggle, className }: DashboardSidebarProps) {
+  const ToggleIcon = collapsed ? PanelLeftOpen : PanelLeftClose
 
-function ModuleTree({
-    modules,
-    collapsed,
-    onNavigate,
-    level = 0,
-}: {
-    modules: AppModule[]
-    collapsed: boolean
-    onNavigate?: () => void
-    level?: number
-}) {
-    return (
-        <div className={cn("space-y-1", level > 0 && "pl-3") }>
-            {modules
-                .filter((module) => module.is_active)
-                .sort((left, right) => left.sort_order - right.sort_order)
-                .map((module) => {
-                    const Icon = getIcon(module.icon)
-                    const hasChildren = module.children.length > 0
+  return (
+    <aside
+      className={cn(
+        "flex h-full flex-col gap-5 border-e border-sidebar-border bg-sidebar px-3.5 py-5 text-sidebar-foreground transition-[width] duration-200",
+        collapsed ? "w-[76px]" : "w-[252px]",
+        className
+      )}
+    >
+      <div className={cn("flex items-center gap-2.5 px-2 py-1.5", collapsed && "flex-col px-0")}>
+        <BrandMark />
+        {collapsed ? null : <span className="text-sm font-bold">Auto Loan</span>}
+      </div>
 
-                    if (hasChildren && !module.route) {
-                        return (
-                            <div key={module.id} className="space-y-2 pt-2 first:pt-0">
-                                {!collapsed ? (
-                                    <p className="px-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                                        {module.name}
-                                    </p>
-                                ) : null}
-                                <ModuleTree
-                                    modules={module.children}
-                                    collapsed={collapsed}
-                                    onNavigate={onNavigate}
-                                    level={level + 1}
-                                />
-                            </div>
-                        )
-                    }
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <SidebarNav modules={modules} collapsed={collapsed} onNavigate={onNavigate} />
+      </div>
 
-                    return (
-                        <Link
-                            key={module.id}
-                            href={module.route ?? "/dashboard"}
-                            onClick={onNavigate}
-                            className={cn(
-                                buttonVariants({ variant: "ghost" }),
-                                "h-10 w-full justify-start text-sm sm:text-base",
-                                collapsed && "justify-center px-0",
-                                level > 0 && "pl-4"
-                            )}
-                        >
-                            <Icon className="size-4" />
-                            {!collapsed ? <span>{module.name}</span> : null}
-                        </Link>
-                    )
-                })}
-        </div>
-    )
-}
-
-export function DashboardSidebar({
-    modules,
-    collapsed,
-    onToggle,
-    onNavigate,
-    hideToggle,
-    className,
-}: DashboardSidebarProps) {
-    return (
-        <aside
-            className={cn(
-                "bg-background flex h-full flex-col border-r px-3 py-4 transition-[width] duration-200",
-                collapsed ? "w-18" : "w-64",
-                className
-            )}
+      {hideToggle ? null : (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={collapsed ? "მენიუს გაშლა" : "მენიუს ჩაკეცვა"}
+          title={collapsed ? "მენიუს გაშლა" : "მენიუს ჩაკეცვა"}
+          className={cn(
+            "flex h-10 items-center gap-2.5 rounded-[9px] px-2.5 text-[13px] font-semibold text-sidebar-foreground/70 transition-colors",
+            "hover:bg-sidebar-accent/60 hover:text-sidebar-foreground focus-visible:outline-2 focus-visible:outline-sidebar-ring",
+            collapsed && "justify-center px-0"
+          )}
         >
-            <div className="mb-6 flex items-center justify-between px-1">
-                {!collapsed ? <p className="text-sm font-semibold sm:text-base">Auto Loan</p> : null}
-                {!hideToggle ? (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-10"
-                        onClick={onToggle}
-                        aria-label="Toggle sidebar"
-                    >
-                        <Menu className="size-4" />
-                    </Button>
-                ) : null}
-            </div>
-
-            <nav className="space-y-1">
-                <ModuleTree modules={modules} collapsed={collapsed} onNavigate={onNavigate} />
-            </nav>
-        </aside>
-    )
+          <ToggleIcon className="size-4" />
+          {collapsed ? null : <span>ჩაკეცვა</span>}
+        </button>
+      )}
+    </aside>
+  )
 }
