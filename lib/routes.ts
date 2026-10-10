@@ -8,8 +8,11 @@ export const API_ROUTES = {
     },
     admin: {
         users: "/api/admin/users",
+        user: (userId: string) => `/api/admin/users/${userId}`,
         roles: "/api/admin/roles",
         userActivation: (userId: string) => `/api/admin/users/${userId}/activation`,
+        branches: "/api/admin/branches",
+        branch: (branchId: string) => `/api/admin/branches/${branchId}`,
     },
     settings: {
         index: "/api/settings",

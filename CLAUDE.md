@@ -64,13 +64,16 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Users admin (`components/users/`)
 
-- Only the reads and the activation toggle reach the backend.
-  - The page loads `GET /api/admin/users` and `GET /api/admin/roles` with `Promise.allSettled`, and failures are silent.
-  - The toggle calls `POST /api/admin/users/:id/activation`.
-  - Create and edit only change local state, and create gives users an `u-<timestamp>` id.
-  - The delete button is commented out.
+- The page loads `GET /api/admin/users`, `GET /api/admin/roles` and `GET /api/admin/branches` with `Promise.allSettled`; failures are silent.
+- Create → `POST /api/admin/users`, edit → `PUT /api/admin/users/:id` (payload from `toUserPayload` in `users-types.ts`; passwords only on create). The list is updated from the server's response. The toggle calls `POST /api/admin/users/:id/activation`. The delete button is commented out.
+- `user-form-schema.ts` mirrors the backend rules (username `[A-Za-z0-9._-]`, password ≥8 + confirmation on create). A branch is required when the role is `credit-officer` (`BRANCH_REQUIRED_ROLE`); other roles get a "ფილიალის გარეშე" option. Only active branches are offered, plus the user's current one.
+- Dialog forms show backend 424 errors on their fields with `getApiFieldErrors()` + `form.setError`, and other errors in a banner (pattern used by `user-form-dialog.tsx` and `branch-form-dialog.tsx`).
 - Filtering and pagination are client-side. The default status filter is `"active"`, so inactive users start hidden.
-- `user-form-dialog.tsx` reuses `registerSchema`, which requires a password of at least 6 characters, even in edit mode. Edit mode only renders the role field.
+
+### Branches admin (`components/branches/`, `/dashboard/branches`)
+
+- `GET/POST/PUT /api/admin/branches`. There is no delete: the power button toggles `is_active`. The table shows code, name, user count and status.
+- The sidebar shows the page through the backend's `branches` module (icon `building-2` → `Building2` in `iconMap`).
 
 ### Loan applications (`components/applications/`)
 

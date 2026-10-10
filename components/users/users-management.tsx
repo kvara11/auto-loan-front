@@ -16,24 +16,18 @@ import { UsersFilters } from "@/components/users/users-filters"
 import { UsersTable } from "@/components/users/users-table"
 import { UserFormDialog } from "@/components/users/user-form-dialog"
 import { DeleteUserDialog } from "@/components/users/delete-user-dialog"
-import { defaultFilters, type UserFilters, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import {
+  defaultFilters,
+  toUserPayload,
+  toUserRecord,
+  type AdminUserResponse,
+  type UserFilters,
+  type UserFormInput,
+  type UserRecord,
+} from "@/components/users/users-types"
+import { toBranchOption, type Branch, type BranchOption } from "@/components/branches/branches-types"
 import { api } from "@/lib/axios"
 import { API_ROUTES } from "@/lib/routes"
-
-type AdminUserResponse = {
-  id: number
-  first_name: string
-  last_name: string
-  username: string
-  email: string
-  role: {
-    id: number
-    name: string
-    display_name: string
-  }
-  active: boolean
-  created_at: string
-}
 
 type AdminRoleResponse = {
   id: number
@@ -47,30 +41,11 @@ type RoleOption = {
   value: string
 }
 
-function toUserRecord(user: AdminUserResponse): UserRecord {
-  return {
-    id: String(user.id),
-    first_name: user.first_name,
-    last_name: user.last_name,
-    username: user.username,
-    email: user.email,
-    password: "",
-    role: user.role.name,
-    roleDisplayName: user.role.display_name,
-    status: user.active ? "active" : "inactive",
-    created_at: user.created_at,
-  }
-}
-
 function toRoleOption(role: AdminRoleResponse): RoleOption {
   return {
     label: role.display_name,
     value: role.name,
   }
-}
-
-function getRoleDisplayName(value: string, roles: RoleOption[]) {
-  return roles.find((role) => role.value === value)?.label ?? value.replace(/-/g, " ")
 }
 
 type FormDialogState = {
@@ -84,6 +59,7 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50]
 export function UsersManagement() {
   const [users, setUsers] = useState<UserRecord[]>([])
   const [roles, setRoles] = useState<RoleOption[]>([])
+  const [branches, setBranches] = useState<BranchOption[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<UserFilters>(defaultFilters)
   const [currentPage, setCurrentPage] = useState(1)
@@ -96,9 +72,10 @@ export function UsersManagement() {
     let isMounted = true
 
     const loadUsers = async () => {
-      const [usersResult, rolesResult] = await Promise.allSettled([
+      const [usersResult, rolesResult, branchesResult] = await Promise.allSettled([
         api.get<{ users: AdminUserResponse[] }>(API_ROUTES.admin.users),
         api.get<AdminRoleResponse[]>(API_ROUTES.admin.roles),
+        api.get<{ branches: Branch[] }>(API_ROUTES.admin.branches),
       ])
 
       if (!isMounted) {
@@ -111,6 +88,10 @@ export function UsersManagement() {
 
       if (rolesResult.status === "fulfilled") {
         setRoles((rolesResult.value.data ?? []).map(toRoleOption))
+      }
+
+      if (branchesResult.status === "fulfilled") {
+        setBranches((branchesResult.value.data?.branches ?? []).map(toBranchOption))
       }
 
       setLoading(false)
@@ -145,31 +126,22 @@ export function UsersManagement() {
   const startIndex = (safeCurrentPage - 1) * pageSize
   const paginatedUsers = filteredUsers.slice(startIndex, startIndex + pageSize)
 
-  const handleCreateOrEdit = (value: UserFormInput) => {
-    if (formDialog.mode === "edit" && formDialog.user) {
-      setUsers((current) =>
-        current.map((user) =>
-          user.id === formDialog.user?.id
-            ? {
-              ...user,
-              ...value,
-              roleDisplayName: getRoleDisplayName(value.role, roles),
-            }
-            : user
-        )
-      )
+  // Errors propagate to UserFormDialog, which shows field errors from the 424 response.
+  const handleCreateOrEdit = async (value: UserFormInput) => {
+    const editing = formDialog.mode === "edit" ? formDialog.user : undefined
+    const payload = toUserPayload(value, editing ? "edit" : "create")
 
-      return
-    }
+    const response = editing
+      ? await api.put<{ user: AdminUserResponse }>(API_ROUTES.admin.user(editing.id), payload)
+      : await api.post<{ user: AdminUserResponse }>(API_ROUTES.admin.users, payload)
 
-    const nextUser: UserRecord = {
-      id: `u-${Date.now()}`,
-      ...value,
-      roleDisplayName: getRoleDisplayName(value.role, roles),
-      created_at: new Date().toISOString().slice(0, 10),
-    }
+    const saved = response.data?.user
+    if (!saved) return
 
-    setUsers((current) => [nextUser, ...current])
+    const record = toUserRecord(saved)
+    setUsers((current) =>
+      editing ? current.map((user) => (user.id === record.id ? record : user)) : [record, ...current]
+    )
   }
 
   const handleToggleStatus = async (userId: string) => {
@@ -312,6 +284,7 @@ export function UsersManagement() {
         onOpenChange={(open) => setFormDialog((current) => ({ ...current, open }))}
         onSubmit={handleCreateOrEdit}
         roles={roles}
+        branches={branches}
       />
 
       <DeleteUserDialog

@@ -1,248 +1,180 @@
 "use client"
 
-import { useEffect } from "react"
-import { z } from "zod"
+import { useEffect, useMemo, useState } from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
+import { useForm, useWatch, type Control, type FieldPath } from "react-hook-form"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { type BranchOption } from "@/components/branches/branches-types"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { registerSchema } from "@/lib/validations/auth"
-import { statusOptions, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { buildUserFormSchema, emptyUserForm } from "@/components/users/user-form-schema"
+import { BRANCH_REQUIRED_ROLE, type UserFormInput, type UserRecord } from "@/components/users/users-types"
+import { getApiErrorMessage, getApiFieldErrors } from "@/lib/axios"
 
-const userFormSchema = registerSchema.extend({
-  role: z.string().min(1, "როლი სავალდებულოა"),
-  status: z.enum(["active", "inactive"]),
-})
+type Option = { label: string; value: string }
 
 type UserFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   mode: "create" | "edit"
   initialUser?: UserRecord
-  onSubmit: (value: UserFormInput) => void
-  roles: Array<{ label: string; value: string }>
+  onSubmit: (value: UserFormInput) => Promise<void>
+  roles: Option[]
+  branches: BranchOption[]
 }
 
-const defaultValues: UserFormInput = {
-  first_name: "",
-  last_name: "",
-  username: "",
-  email: "",
-  password: "",
-  role: "",
-  status: "active",
+const NO_BRANCH = "none"
+
+function TextField({ control, name, label, type = "text" }: {
+  control: Control<UserFormInput>
+  name: FieldPath<UserFormInput>
+  label: string
+  type?: string
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Input className="h-10" type={type} autoComplete={type === "password" ? "new-password" : "off"} {...field} />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
 }
 
-export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles }: UserFormDialogProps) {
+// `emptyOption`: an option whose value stands for "" (e.g. "no branch"); Radix Select can't use "" as an item value.
+function SelectField({ control, name, label, placeholder, options, emptyOption }: {
+  control: Control<UserFormInput>
+  name: "role" | "branch_id"
+  label: string
+  placeholder: string
+  options: Option[]
+  emptyOption?: Option
+}) {
+  const allOptions = emptyOption ? [emptyOption, ...options] : options
+
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>{label}</FormLabel>
+          <Select
+            value={field.value || (emptyOption?.value ?? "")}
+            onValueChange={(next) => field.onChange(next === emptyOption?.value ? "" : next)}
+          >
+            <FormControl>
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder={placeholder} />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent>
+              {allOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  )
+}
+
+export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles, branches }: UserFormDialogProps) {
   const isCreateMode = mode === "create"
-
-  const noAutoFillProps = {
-    "data-1p-ignore": "true",
-    "data-lpignore": "true",
-  } as const
-
-  const form = useForm<UserFormInput>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues,
-  })
+  const [submitError, setSubmitError] = useState<string>()
+  const schema = useMemo(() => buildUserFormSchema(mode), [mode])
+  const form = useForm<UserFormInput>({ resolver: zodResolver(schema), defaultValues: emptyUserForm })
+  const role = useWatch({ control: form.control, name: "role" })
 
   useEffect(() => {
     if (!open) return
-
-    if (!initialUser) {
-      form.reset(defaultValues)
-      return
-    }
-
-    form.reset({
+    form.reset(initialUser ? {
+      ...emptyUserForm,
       first_name: initialUser.first_name,
       last_name: initialUser.last_name,
       username: initialUser.username,
       email: initialUser.email,
-      password: initialUser.password,
       role: initialUser.role,
-      status: initialUser.status,
-    })
+      branch_id: initialUser.branchId,
+    } : emptyUserForm)
   }, [form, initialUser, open])
 
-  const handleSubmit = (value: UserFormInput) => {
-    onSubmit(value)
-    onOpenChange(false)
+  // Only active branches can be assigned; keep the user's current branch visible even if inactive.
+  const branchOptions = branches.filter((branch) => branch.active || branch.value === initialUser?.branchId)
+  const noBranchOption = role === BRANCH_REQUIRED_ROLE ? undefined : { label: "ფილიალის გარეშე", value: NO_BRANCH }
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setSubmitError(undefined)
+    onOpenChange(next)
+  }
+
+  const handleSubmit = async (value: UserFormInput) => {
+    setSubmitError(undefined)
+    try {
+      await onSubmit(value)
+      handleOpenChange(false)
+    } catch (error) {
+      const fieldErrors = getApiFieldErrors(error)
+      Object.entries(fieldErrors).forEach(([field, message]) => {
+        if (field in emptyUserForm) form.setError(field as FieldPath<UserFormInput>, { message })
+      })
+      if (Object.keys(fieldErrors).length === 0) {
+        setSubmitError(getApiErrorMessage(error) || "მომხმარებლის შენახვა ვერ მოხერხდა.")
+      }
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl" aria-describedby={undefined}>
         <DialogHeader>
-          <DialogTitle>{mode === "create" ? "მომხმარებლის დამატება" : "მომხმარებლის რედაქტირება"}</DialogTitle>
-          {/* <DialogDescription>
-            {mode === "create"
-              ? "Add a new user with registration fields and role settings."
-              : "Update user details and account access settings."}
-          </DialogDescription> */}
+          <DialogTitle>{isCreateMode ? "მომხმარებლის დამატება" : "მომხმარებლის რედაქტირება"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">
-            {isCreateMode ? (
-              <>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="first_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>სახელი</FormLabel>
-                        <FormControl>
-                          <Input className="h-10" placeholder="John" {...field} {...noAutoFillProps} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="last_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>გვარი</FormLabel>
-                        <FormControl>
-                          <Input className="h-10" placeholder="Doe" {...field} {...noAutoFillProps} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>მომხმარებლის სახელი</FormLabel>
-                      <FormControl>
-                        <Input className="h-10" placeholder="johndoe" {...field} {...noAutoFillProps} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>იმეილი</FormLabel>
-                      <FormControl>
-                        <Input className="h-10" placeholder="john@example.com" type="email" {...field} {...noAutoFillProps} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>პაროლი</FormLabel>
-                      <FormControl>
-                        <Input className="h-10" placeholder="••••••••" type="password" {...field} {...noAutoFillProps} autoComplete="new-password" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </>
-            ) : null}
-
-            <div className={isCreateMode ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : undefined}>
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>როლი</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="აირჩიეთ როლი" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {roles.map((role) => (
-                          <SelectItem key={role.value} value={role.value}>
-                            {role.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* {isCreateMode ? (
-                <FormField
-                  control={form.control}
-                  name="status"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>სტატუსი</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {statusOptions.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
-                              {status.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ) : null} */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <TextField control={form.control} name="first_name" label="სახელი" />
+              <TextField control={form.control} name="last_name" label="გვარი" />
+              <TextField control={form.control} name="username" label="მომხმარებლის სახელი" />
+              <TextField control={form.control} name="email" label="იმეილი" type="email" />
+              {isCreateMode ? (
+                <>
+                  <TextField control={form.control} name="password" label="პაროლი" type="password" />
+                  <TextField control={form.control} name="password_confirmation" label="გაიმეორეთ პაროლი" type="password" />
+                </>
+              ) : null}
+              <SelectField control={form.control} name="role" label="როლი" placeholder="აირჩიეთ როლი" options={roles} />
+              <SelectField control={form.control} name="branch_id" label="ფილიალი" placeholder="აირჩიეთ ფილიალი" options={branchOptions} emptyOption={noBranchOption} />
             </div>
 
+            {submitError ? (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {submitError}
+              </div>
+            ) : null}
+
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              <Button type="button" variant="outline" className="h-10" onClick={() => handleOpenChange(false)}>
                 გაუქმება
               </Button>
-              <Button type="submit">{mode === "create" ? "დამატება" : "შენახვა"}</Button>
+              <Button type="submit" className="h-10" disabled={form.formState.isSubmitting}>
+                {isCreateMode ? "დამატება" : "შენახვა"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

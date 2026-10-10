@@ -109,7 +109,7 @@ Files: `components/users/*`.
 
 ### Load
 
-1. **Parallel load.** `GET /api/admin/users` (read from `data.users`) and `GET /api/admin/roles` (read from `data`) load in parallel. Each user's role is shown by its `display_name`.
+1. **Parallel load.** `GET /api/admin/users` (read from `data.users`), `GET /api/admin/roles` (read from `data`) and `GET /api/admin/branches` (read from `data.branches`) load in parallel. Each user's role is shown by its `display_name` and the branch as `code — name` (or "—").
 2. **Users request fails.** An error should be shown.
    **Known issue:** the page shows the "მომხმარებელი ვერ მოიძებნა" empty state with no error.
 3. **Roles request fails.** The role filter and the role select are empty.
@@ -130,12 +130,23 @@ Files: `components/users/*`.
 
 ### Create, edit and delete
 
-10. **Create.** Creating a user should send it to the backend and keep it after a reload.
-    **Known issue:** no request is sent. The user is only added to local state with id `u-<timestamp>`, and it disappears on reload.
-11. **Edit.** Changing a user's role should save it.
-    **Known issue:** edit mode only shows the role field, but the schema still requires a 6-character password. Validation fails on that hidden field and Save does nothing. Even if it passed, the change would only be local.
-12. **Inactive users.** The edit button is disabled for inactive users.
-13. **Delete.** The delete button is commented out in `users-table.tsx`, and `handleDelete` only changes local state. Add scenarios here once delete is wired to the backend.
+10. **Create.** `POST /api/admin/users` with names, username, email, password + confirmation, role and `branch_id` → the dialog closes and the user appears at the top of the list; it is still there after a reload.
+11. **Branch rule.** Role `საკრედიტო ოფიცერი` without a branch → client-side error on the branch field, no request. Other roles offer "ფილიალის გარეშე". Deactivated branches are not offered (except the user's current one when editing).
+12. **Backend validation.** A taken username/email, or a weak password → the dialog stays open and the Georgian message appears under the field.
+13. **Edit.** `PUT /api/admin/users/:id` with names, username, email, role and branch (no password fields) → the row updates in place. Editing a super-admin, or changing your own role, shows the backend message in the dialog banner.
+14. **Inactive users.** The edit button is disabled for inactive users (the backend would allow it).
+15. **Delete.** The delete button is commented out in `users-table.tsx`, and `handleDelete` only changes local state. Add scenarios here once delete is wired to the backend.
+
+## 4b. Branches admin
+
+Files: `app/dashboard/branches/page.tsx`, `components/branches/*`.
+
+1. **Menu.** Administrator and super-admin see "ფილიალები" under "ადმინისტრაცია"; officers and risk managers don't (and get 401 from the API if they open the URL).
+2. **Load.** `GET /api/admin/branches` → table with code, name, user count (hidden on mobile) and status. No branches → the empty state "ფილიალები ჯერ არ არის დამატებული". A failed load shows an error banner.
+3. **Create.** Code (`A-Z a-z 0-9 _ -`, ≤20) and name are required → `POST`; the new branch appears in code order.
+4. **Duplicate.** An existing code or name → the 424 message appears under the field and the dialog stays open.
+5. **Edit.** `PUT` with code and name keeps the current status.
+6. **Deactivate / activate.** The power button sends `PUT` with `is_active` flipped; the badge switches between "აქტიური" and "გათიშული". There is no delete.
 
 ## 5. Applications list, details dialog and detail page
 

@@ -5,6 +5,7 @@ import type { LucideIcon } from "lucide-react"
 import {
     BadgeCheck,
     BriefcaseBusiness,
+    Building2,
     Car,
     ChartBar,
     CheckCheck,
@@ -41,6 +42,7 @@ const iconMap: Record<string, LucideIcon> = {
     "badge-check": BadgeCheck,
     "key-round": KeyRound,
     settings: Settings,
+    "building-2": Building2,
 }
 
 function getIcon(name: string) {

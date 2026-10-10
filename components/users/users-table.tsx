@@ -69,6 +69,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
             <TableHead>გვარი</TableHead>
             <TableHead>იმეილი</TableHead>
             <TableHead>როლი</TableHead>
+            <TableHead className="hidden md:table-cell">ფილიალი</TableHead>
             <TableHead>სტატუსი</TableHead>
             <TableHead>შექმნის დრო</TableHead>
             <TableHead className="text-right">ოპერირება</TableHead>
@@ -81,6 +82,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
               <TableCell>{user.last_name}</TableCell>
               <TableCell>{user.email}</TableCell>
               <TableCell>{user.roleDisplayName ?? formatRole(user.role)}</TableCell>
+              <TableCell className="hidden md:table-cell">{user.branchName ?? "—"}</TableCell>
               <TableCell>
                 <Badge variant={user.status === "active" ? "success" : "inactive"}>
                   {formatStatus(user.status)}

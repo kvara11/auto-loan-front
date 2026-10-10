@@ -72,4 +72,18 @@ export function getApiErrorMessage(error: unknown) {
   return fieldMessage || body?.message;
 }
 
+// Field → first message from a 424 validation response, for react-hook-form's setError.
+export function getApiFieldErrors(error: unknown): Record<string, string> {
+  if (!isAxiosError<ApiErrorBody>(error) || !error.response?.data?.errors) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(error.response.data.errors).map(([field, messages]) => [
+      field,
+      Array.isArray(messages) ? messages[0] : messages,
+    ])
+  );
+}
+
 export default axiosInstance;
