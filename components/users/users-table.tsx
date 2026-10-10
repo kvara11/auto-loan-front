@@ -2,6 +2,7 @@
 
 import { Edit, Power } from "lucide-react"
 
+import { UserAvatar } from "@/components/dashboard/user-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Loading } from "@/components/ui/loading"
@@ -65,9 +66,7 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>სახელი</TableHead>
-            <TableHead>გვარი</TableHead>
-            <TableHead>იმეილი</TableHead>
+            <TableHead>მომხმარებელი</TableHead>
             <TableHead>როლი</TableHead>
             <TableHead className="hidden md:table-cell">ფილიალი</TableHead>
             <TableHead>სტატუსი</TableHead>
@@ -78,9 +77,15 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id}>
-              <TableCell>{user.first_name}</TableCell>
-              <TableCell>{user.last_name}</TableCell>
-              <TableCell>{user.email}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2.5">
+                  <UserAvatar user={{ first_name: user.first_name, last_name: user.last_name, avatar_url: user.avatarUrl }} className="size-8" fallbackClassName="text-xs" />
+                  <div className="min-w-0">
+                    <p className="font-medium">{user.first_name} {user.last_name}</p>
+                    <p className="text-xs text-muted-foreground">{user.email}</p>
+                  </div>
+                </div>
+              </TableCell>
               <TableCell>{user.roleDisplayName ?? formatRole(user.role)}</TableCell>
               <TableCell className="hidden md:table-cell">{user.branchName ?? "—"}</TableCell>
               <TableCell>

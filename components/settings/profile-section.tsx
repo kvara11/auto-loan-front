@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Save } from "lucide-react"
 
+import { AvatarField } from "@/components/settings/avatar-field"
 import { FormNotice, SettingsSection } from "@/components/settings/settings-section"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
@@ -63,7 +64,7 @@ export function ProfileSection({ profile }: { profile: ProfileInfo }) {
       <form onSubmit={form.handleSubmit(handleSubmit)} autoComplete="off">
         <SettingsSection
           title="პირადი ინფორმაცია"
-          description="თქვენი სახელი და გვარი. მომხმარებლის სახელს და იმეილს ადმინისტრატორი ცვლის."
+          description="თქვენი ავატარი, სახელი და გვარი. მომხმარებლის სახელს და იმეილს ადმინისტრატორი ცვლის."
           footer={
             <Button type="submit" className="h-10" disabled={!isDirty || isSubmitting}>
               <Save className="size-4" />
@@ -71,6 +72,7 @@ export function ProfileSection({ profile }: { profile: ProfileInfo }) {
             </Button>
           }
         >
+          <AvatarField profile={profile} />
           <div className="grid gap-4 sm:grid-cols-2">
             {NAME_FIELDS.map(({ name, label }) => (
               <FormField

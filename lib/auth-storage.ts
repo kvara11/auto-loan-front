@@ -27,6 +27,8 @@ export type AuthUser = {
     last_name: string
     username: string
     email: string
+    // API path of the avatar (T-207), null → initials; see avatarSrc().
+    avatar_url?: string | null
     role: { id: number; name: string; display_name: string | null } | null
     branch: { id: number; code: string; name: string } | null
     permissions: string[]

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AvatarModeration } from "@/components/users/avatar-moderation"
 import { buildUserFormSchema, emptyUserForm } from "@/components/users/user-form-schema"
 import { BRANCH_REQUIRED_ROLES, type UserFormInput, type UserRecord } from "@/components/users/users-types"
 import { getApiErrorMessage, getApiFieldErrors } from "@/lib/axios"
@@ -24,6 +25,7 @@ type UserFormDialogProps = {
   onSubmit: (value: UserFormInput) => Promise<void>
   roles: Option[]
   branches: BranchOption[]
+  onAvatarRemoved?: (userId: string) => void
 }
 
 const NO_BRANCH = "none"
@@ -93,7 +95,7 @@ function SelectField({ control, name, label, placeholder, options, emptyOption }
   )
 }
 
-export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles, branches }: UserFormDialogProps) {
+export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit, roles, branches, onAvatarRemoved }: UserFormDialogProps) {
   const isCreateMode = mode === "create"
   const [submitError, setSubmitError] = useState<string>()
   const schema = useMemo(() => buildUserFormSchema(mode), [mode])
@@ -144,6 +146,8 @@ export function UserFormDialog({ open, onOpenChange, mode, initialUser, onSubmit
         <DialogHeader>
           <DialogTitle>{isCreateMode ? "მომხმარებლის დამატება" : "მომხმარებლის რედაქტირება"}</DialogTitle>
         </DialogHeader>
+
+        {!isCreateMode && initialUser && onAvatarRemoved ? <AvatarModeration user={initialUser} onRemoved={onAvatarRemoved} /> : null}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" autoComplete="off">

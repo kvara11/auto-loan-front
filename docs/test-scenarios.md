@@ -89,6 +89,9 @@ Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferen
 6. **Client-side validation.** A name shorter than 2 characters → a Georgian error under the field, no request.
 7. **Save.** `PUT /api/settings/profile` with `{ first_name, last_name }` → "პროფილი განახლდა.", the button disables again, and the header shows the new name (the cached auth user is updated). A reload shows the saved names.
 8. **Backend validation.** A 424 is shown under the matching field; any other error appears in the section's banner.
+8a. **Avatar upload (T-207).** Without an avatar the circle shows initials and "ავატარის ატვირთვა". Picking a JPG/PNG/WEBP shows a square, center-cropped preview with "ავატარის შენახვა" / "გაუქმება" (cancel restores the old picture, no request). Saving → "ავატარი განახლდა.", the top-bar avatar changes at once and stays after a reload; the button becomes "ავატარის შეცვლა".
+8b. **Avatar errors.** A file the browser can't decode (HEIC, PDF renamed) → "სურათის წაკითხვა ვერ მოხერხდა…"; over 20 MB → message before decoding; a backend 424 shows its Georgian message.
+8c. **Avatar removal.** "წაშლა" → "ავატარი წაიშალა.", initials return in settings and the top bar.
 
 ### Interface preferences (own save button)
 
@@ -136,6 +139,8 @@ Files: `components/users/*`.
 12. **Backend validation.** A taken username/email, or a weak password → the dialog stays open and the Georgian message appears under the field.
 13. **Edit.** `PUT /api/admin/users/:id` with names, username, email, role and branch (no password fields) → the row updates in place. Editing a super-admin, or changing your own role, shows the backend message in the dialog banner.
 14. **Inactive users.** The edit button is disabled for inactive users (the backend would allow it).
+14a. **Avatars in the table.** The first column "მომხმარებელი" shows the avatar (or initials), the full name and the email below it (no separate email column); users with an avatar show the picture, others their initials; both themes; the images load only when the app is opened on `127.0.0.1`.
+14b. **Avatar moderation.** The edit dialog shows the user's avatar; with one, "ავატარის წაშლა" → confirmation → removed, the dialog shows "ავატარი არ არის ატვირთული", the row shows initials, and unsaved edits in the form are kept.
 15. **Delete.** The delete button is commented out in `users-table.tsx`, and `handleDelete` only changes local state. Add scenarios here once delete is wired to the backend.
 
 ## 4b. Branches admin
@@ -195,6 +200,12 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 16d. **Open / download.** Clicking the name or thumbnail opens it in a new tab (inline); the download button downloads with the original name. Works only when the app is opened on `127.0.0.1` (cookie).
 16e. **Delete.** Only on files you uploaded while you can still upload; confirmation dialog; the file disappears from the list, the history shows "ფაილი წაიშალა", the file stays on the server.
 16f. **After submit.** The officer's upload bar and delete buttons disappear once the application is sent to risks.
+
+### Comments (T-408)
+
+16g. **Thread.** "კომენტარები (N)" below the attachments: oldest first, each with `ე. გვარი`, the author's role, date/time and the text (line breaks kept). Conclusions/recommendations are tinted with a blue type badge ("ოფიცრის დასკვნა", "ფილიალის რეკომენდაცია", "რისკის დასკვნა"). Empty → "კომენტარები ჯერ არ არის".
+16h. **Who writes.** Officer (own application), branch manager (branch), risk manager (submitted and decided) see the textarea in every status; the auditor sees only the list. The type select lists "კომენტარი" plus the user's own conclusion type (officer: only on their own application); super-admin sees all types.
+16i. **Sending.** "დამატება" (or Ctrl+Enter on desktop) is disabled while empty; after sending the text clears, the type returns to "კომენტარი" and the list reloads. Over 4500 characters a `N / 5000` counter shows; the textarea stops at 5000. Comments can't be edited or deleted and don't appear in the history.
 
 ### Workflow actions (buttons come from `data.actions`)
 

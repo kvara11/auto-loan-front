@@ -7,6 +7,7 @@ export type UserRecord = {
   last_name: string
   username: string
   email: string
+  avatarUrl: string | null
   role: UserRole
   roleDisplayName?: string
   branchId: string
@@ -42,6 +43,7 @@ export type AdminUserResponse = {
   last_name: string
   username: string
   email: string
+  avatar_url: string | null
   role: { id: number; name: string; display_name: string } | null
   branch: { id: number; code: string; name: string } | null
   active: boolean
@@ -55,10 +57,11 @@ export function toUserRecord(user: AdminUserResponse): UserRecord {
     last_name: user.last_name,
     username: user.username,
     email: user.email,
+    avatarUrl: user.avatar_url ?? null,
     role: user.role?.name ?? "",
     roleDisplayName: user.role?.display_name,
     branchId: user.branch ? String(user.branch.id) : "",
-    branchName: user.branch ? `${user.branch.code} — ${user.branch.name}` : undefined,
+    branchName: user.branch ? user.branch.name : undefined,
     status: user.active ? "active" : "inactive",
     created_at: user.created_at,
   }

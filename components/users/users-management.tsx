@@ -285,6 +285,9 @@ export function UsersManagement() {
         onSubmit={handleCreateOrEdit}
         roles={roles}
         branches={branches}
+        onAvatarRemoved={(userId) =>
+          setUsers((current) => current.map((user) => (user.id === userId ? { ...user, avatarUrl: null } : user)))
+        }
       />
 
       <DeleteUserDialog

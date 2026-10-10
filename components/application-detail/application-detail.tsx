@@ -6,6 +6,7 @@ import Link from "next/link"
 import { type ApplicationAction, type ApplicationDetails, type HistoryEntry } from "@/components/applications/applications-types"
 import { ActionDialog } from "@/components/application-detail/action-dialog"
 import { AttachmentsCard } from "@/components/application-detail/attachments-card"
+import { CommentsCard } from "@/components/application-detail/comments-card"
 import { DecisionBanner, OfficerComment } from "@/components/application-detail/decision-note"
 import { DetailHeader } from "@/components/application-detail/detail-header"
 import { ClientCard, LoanCard, VehicleCard } from "@/components/application-detail/detail-sections"
@@ -89,6 +90,7 @@ export function ApplicationDetail({ id }: { id: string }) {
           <LoanCard app={app} />
           <VehicleCard app={app} />
           <AttachmentsCard applicationId={app.id} status={app.status} onChanged={loadHistory} />
+          <CommentsCard applicationId={app.id} />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
           <LtvCard app={app} />

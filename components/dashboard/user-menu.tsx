@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { isAxiosError } from "axios"
 import { LogOut, Settings } from "lucide-react"
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { UserAvatar } from "@/components/dashboard/user-avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,10 +17,6 @@ import {
 import { clearAuthUser, useAuthUser } from "@/lib/auth-storage"
 import { api } from "@/lib/axios"
 import { API_ROUTES } from "@/lib/routes"
-
-function initials(firstName?: string, lastName?: string) {
-  return `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}` || "?"
-}
 
 export function UserMenu() {
   const router = useRouter()
@@ -52,11 +48,7 @@ export function UserMenu() {
           aria-label="მომხმარებლის მენიუ"
           className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-secondary text-[13px] font-bold text-secondary-foreground">
-              {initials(user?.first_name, user?.last_name)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} className="cursor-pointer" />
         </button>
       </DropdownMenuTrigger>
 

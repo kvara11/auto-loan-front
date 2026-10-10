@@ -9,6 +9,7 @@ export type ProfileInfo = {
   last_name: string
   username: string
   email: string
+  avatar_url: string | null
 }
 
 // UI preferences; the backend returns them typed, with defaults for unset keys.
