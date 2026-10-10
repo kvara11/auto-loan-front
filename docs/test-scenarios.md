@@ -97,13 +97,11 @@ Files: `components/settings/settings-form.tsx`, `hooks/use-settings.ts`, `lib/se
 
 ### Change password
 
-11. **Mismatched or empty passwords.** An error is shown and no request is sent.
-12. **Minimum length.** Passwords should need at least 6 characters, matching registration.
-    **Known issue:** a 1-character password is accepted.
-13. **Success.** `POST /api/auth/change-password` with `{ password, password_verify }` → the dialog closes and a confirmation is visible.
+11. **Empty or mismatched fields.** Any of the three fields empty, or new password ≠ repeat → a Georgian error is shown and no request is sent.
+12. **Backend rules.** Wrong current password, a new password shorter than 8 characters, without mixed case/number/symbol, or equal to the current one → 424, and the dialog shows the specific Georgian field message.
+13. **Success.** `POST /api/auth/change-password` with `{ current_password, password, password_confirmation }` → the dialog closes; other browsers/devices of the same user are signed out, this one stays signed in.
     **Known issue:** the success message is rendered inside the dialog that has just closed. Old messages also reappear when the dialog is reopened.
-14. **Only one request on submit.** Submitting the password form should send exactly one request.
-    **Known issue:** the password form is nested inside the settings `<form>` in the React tree, so the submit may also trigger a settings save. Check the Network tab.
+14. **Only one request on submit.** Submitting the password form sends exactly one request and does not save the settings form (the handler calls `stopPropagation()`). Check the Network tab.
 
 ## 4. Users admin
 

@@ -25,7 +25,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Talking to the backend
 
-- In `lib/axios.ts`, `axiosInstance` points at `NEXT_PUBLIC_API_URL` with `withCredentials: true`, and auth is a backend session cookie. Use the `api.get/post/put/patch/delete` wrappers. They return the backend envelope `{ success, message, data }` rather than the axios response, so read payloads as `response.data?.foo`. `getApiErrorMessage(err)` extracts the backend's `message` from a failed request.
+- In `lib/axios.ts`, `axiosInstance` points at `NEXT_PUBLIC_API_URL` with `withCredentials: true`, and auth is an HttpOnly cookie holding a Sanctum personal access token (no session, no CSRF). Use the `api.get/post/put/patch/delete` wrappers. They return the backend envelope `{ success, message, data }` rather than the axios response, so read payloads as `response.data?.foo`. `getApiErrorMessage(err)` returns the first field message from a 424 `errors` object, otherwise the backend's `message`.
 - There is no axios interceptor, so a 401 is not handled globally. Each call site decides what to do with it.
 - `API_ROUTES` in `lib/routes.ts` holds the auth, admin and settings endpoints. The application and client endpoints (`/api/applications`, `/api/clients`, `/api/clients/personal/:personalId`) are still written as inline strings in components.
 - **There are two different `/api/*` namespaces.** A path passed to `api.*` goes to the backend, while `fetch("/api/...")` goes to this app's own route handlers under `app/api/`. The only such handler is `app/api/stats/vehicle-options/route.ts`, a server-side proxy that adds the secret `X-API-KEY` header (from `STAT_API_KEY`) and forwards the browser's cookie. Use this pattern for any backend endpoint that needs a secret.
@@ -60,7 +60,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - After a save, `settings-form.tsx` also writes the theme and sidebar values to `localStorage` (`lib/ui-preferences.ts`). The rest of the app reads only `localStorage`.
   - `ThemeSync` in the root layout reads the theme and toggles the `dark` class on `<html>` in an effect. There is no script that runs before first paint, so dark-mode users see a light flash on load.
   - The shell reads the sidebar value through its own copy of `getStoredSidebarCollapsed` in `dashboard-shell-state.tsx`.
-- The change-password dialog posts `{ password, password_verify }` to `/api/auth/change-password`. Its `<form>` is portaled, but in the React tree it sits inside the settings `<form>`.
+- The change-password dialog posts `{ current_password, password, password_confirmation }` to `/api/auth/change-password`. On success the backend signs out every other session of the user. The dialog's `<form>` is portaled, but in the React tree it sits inside the settings `<form>`, so its submit handler calls `stopPropagation()`; keep that if you move it.
 
 ### Users admin (`components/users/`)
 

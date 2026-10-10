@@ -54,12 +54,22 @@ export const api = {
   },
 };
 
+type ApiErrorBody = ApiResponse & {
+  errors?: Record<string, string[] | string> | null;
+};
+
+// For a validation failure (424) the backend's `message` is just "Validation failed.",
+// so prefer the first field error, which is the specific (Georgian) reason.
 export function getApiErrorMessage(error: unknown) {
-  if (!isAxiosError<ApiResponse>(error)) {
+  if (!isAxiosError<ApiErrorBody>(error)) {
     return undefined;
   }
 
-  return error.response?.data?.message;
+  const body = error.response?.data;
+  const firstFieldError = body?.errors ? Object.values(body.errors)[0] : undefined;
+  const fieldMessage = Array.isArray(firstFieldError) ? firstFieldError[0] : firstFieldError;
+
+  return fieldMessage || body?.message;
 }
 
 export default axiosInstance;

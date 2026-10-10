@@ -74,6 +74,7 @@ export function SettingsForm() {
     const authUser = useAuthUser()
     const { settings, status, error, success, isDirty, updateSetting, submit } = useSettings()
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+    const [currentPassword, setCurrentPassword] = useState("")
     const [password, setPassword] = useState("")
     const [passwordVerify, setPasswordVerify] = useState("")
     const [passwordStatus, setPasswordStatus] = useState<"idle" | "saving">("idle")
@@ -123,14 +124,17 @@ export function SettingsForm() {
 
     const handlePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        // The dialog is portaled, but in the React tree it sits inside the settings <form>,
+        // so without this the submit would also save the settings form.
+        event.stopPropagation()
 
-        if (!password || !passwordVerify) {
-            setPasswordError("Both password fields are required.")
+        if (!currentPassword || !password || !passwordVerify) {
+            setPasswordError("შეავსეთ ყველა ველი.")
             return
         }
 
         if (password !== passwordVerify) {
-            setPasswordError("Passwords do not match.")
+            setPasswordError("პაროლები არ ემთხვევა.")
             return
         }
 
@@ -140,16 +144,18 @@ export function SettingsForm() {
             setPasswordSuccess(null)
 
             await api.post(API_ROUTES.auth.changePassword, {
+                current_password: currentPassword,
                 password,
-                password_verify: passwordVerify,
+                password_confirmation: passwordVerify,
             })
 
-            setPasswordSuccess("Password changed.")
+            setPasswordSuccess("პაროლი წარმატებით შეიცვალა.")
+            setCurrentPassword("")
             setPassword("")
             setPasswordVerify("")
             setIsPasswordDialogOpen(false)
         } catch (requestError: unknown) {
-            setPasswordError(getApiErrorMessage(requestError) || "Could not change password.")
+            setPasswordError(getApiErrorMessage(requestError) || "პაროლის შეცვლა ვერ მოხერხდა.")
         } finally {
             setPasswordStatus("idle")
         }
@@ -309,10 +315,23 @@ export function SettingsForm() {
 
                                         <form className="space-y-4" onSubmit={handlePasswordSubmit}>
                                             <div className="space-y-2">
-                                                <Label htmlFor="password">პაროლი</Label>
+                                                <Label htmlFor="current_password">მიმდინარე პაროლი</Label>
+                                                <Input
+                                                    id="current_password"
+                                                    type="password"
+                                                    autoComplete="current-password"
+                                                    className="h-10"
+                                                    value={currentPassword}
+                                                    onChange={(event) => setCurrentPassword(event.target.value)}
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label htmlFor="password">ახალი პაროლი</Label>
                                                 <Input
                                                     id="password"
                                                     type="password"
+                                                    autoComplete="new-password"
                                                     className="h-10"
                                                     value={password}
                                                     onChange={(event) => setPassword(event.target.value)}
@@ -320,10 +339,11 @@ export function SettingsForm() {
                                             </div>
 
                                             <div className="space-y-2">
-                                                <Label htmlFor="password_verify">გაიმეორეთ პაროლი</Label>
+                                                <Label htmlFor="password_verify">გაიმეორეთ ახალი პაროლი</Label>
                                                 <Input
                                                     id="password_verify"
                                                     type="password"
+                                                    autoComplete="new-password"
                                                     className="h-10"
                                                     value={passwordVerify}
                                                     onChange={(event) => setPasswordVerify(event.target.value)}
