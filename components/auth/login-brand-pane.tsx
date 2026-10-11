@@ -20,9 +20,6 @@ export function LoginBrandPane() {
 
       <div className="flex max-w-[420px] flex-col gap-[18px]">
         <p className="text-4xl leading-tight font-bold">ავტოსესხების გაცემა და მართვა — ერთ სისტემაში</p>
-        <p className="text-[15px] leading-relaxed opacity-85">
-          Excel-ის ნაცვლად: განაცხადები, შეფასება და დამტკიცება ერთ ადგილას, თქვენი ფილიალისთვის.
-        </p>
       </div>
 
       <p className="text-xs opacity-70">© 2026 Qbind · შიდა სისტემა</p>
