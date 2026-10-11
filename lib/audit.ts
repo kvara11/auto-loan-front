@@ -1,6 +1,6 @@
 import { MARITAL_OPTIONS, optionLabel } from "@/components/application-wizard/wizard-options"
 import { api } from "@/lib/axios"
-import { formatDateTime } from "@/lib/format"
+import { formatDateTime, recentDateRange } from "@/lib/format"
 import { type PageMeta } from "@/lib/pagination"
 import { API_ROUTES } from "@/lib/routes"
 
@@ -25,7 +25,8 @@ export type AuditEvent = {
 // "" means no filter; dates are "YYYY-MM-DD", inclusive.
 export type AuditFilters = { search: string; action: string; subject_type: string; start_date: string; end_date: string }
 
-export const EMPTY_AUDIT_FILTERS: AuditFilters = { search: "", action: "", subject_type: "", start_date: "", end_date: "" }
+// The page opens on the last week; "გასუფთავება" goes back to it.
+export const defaultAuditFilters = (): AuditFilters => ({ search: "", action: "", subject_type: "", ...recentDateRange() })
 
 export const AUDIT_PAGE_SIZES = [25, 50, 100]
 

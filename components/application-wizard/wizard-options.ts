@@ -14,8 +14,6 @@ export const INCOME_TYPE_OPTIONS: Option[] = [
   { value: "lease", label: "იჯარა" },
 ]
 
-export const CURRENCY_OPTIONS: Option[] = ["GEL", "USD", "EUR"].map((value) => ({ value, label: value }))
-
 export const FEE_TYPE_OPTIONS: Option[] = [
   { value: "amount", label: "GEL" },
   { value: "percent", label: "%" },

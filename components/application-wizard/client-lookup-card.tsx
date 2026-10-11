@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, Search, UserCheck } from "lucide-react"
+import { Loader2, Search, UserCheck, UserX } from "lucide-react"
 
 import { Field } from "@/components/application-wizard/form-field"
 import { WizardSection } from "@/components/application-wizard/wizard-section"
@@ -44,15 +44,23 @@ export function ClientLookupCard({ wizard }: { wizard: WizardState }) {
           <span className="flex size-9 items-center justify-center rounded-full bg-success text-success-foreground">
             <UserCheck className="size-4" />
           </span>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-48 flex-1">
             <p className="text-sm font-semibold">
               {form.first_name} {form.last_name} — მოიძებნა
             </p>
             <p className="text-xs text-muted-foreground">მონაცემები შევსებულია ავტომატურად; ცვლილებები კლიენტის პროფილში შეინახება</p>
           </div>
           {isEdit ? null : (
-            <Button type="button" variant="ghost" className="h-10" onClick={resetClient}>
-              სხვა კლიენტი
+            // Only takes the client off this form; the client's profile stays in the registry.
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 w-full sm:w-auto"
+              onClick={resetClient}
+              title="კლიენტი მოიხსნება ამ განაცხადიდან და შეგიძლიათ სხვა პირადი ნომერი მოძებნოთ. კლიენტის პროფილი არ წაიშლება."
+            >
+              <UserX className="size-4" />
+              კლიენტის მოხსნა
             </Button>
           )}
         </div>

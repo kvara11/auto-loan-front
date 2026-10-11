@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { getApiErrorMessage } from "@/lib/axios"
 import { useAuthUser } from "@/lib/auth-storage"
 import {
-  EMPTY_APPLICATION_FILTERS,
+  defaultApplicationFilters,
   fetchApplicationsPage,
   PAGE_SIZE_OPTIONS,
   type ApplicationFilters,
@@ -21,18 +21,18 @@ import { TablePagination } from "@/components/shared/table-pagination"
 
 type Query = { filters: ApplicationFilters; page: number; perPage: number }
 
-const INITIAL_QUERY: Query = { filters: EMPTY_APPLICATION_FILTERS, page: 1, perPage: PAGE_SIZE_OPTIONS[1] }
+const initialQuery = (): Query => ({ filters: defaultApplicationFilters(), page: 1, perPage: PAGE_SIZE_OPTIONS[1] })
 
 export function ApplicationsManagement() {
   const [applications, setApplications] = useState<ApplicationRecord[]>([])
   const [meta, setMeta] = useState<PageMeta>()
-  const [query, setQuery] = useState<Query>(INITIAL_QUERY)
+  const [query, setQuery] = useState<Query>(initialQuery)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>()
   // UX only: the backend enforces applications.create on POST /api/applications.
   const canCreate = useAuthUser()?.permissions?.includes("applications.create") ?? false
 
-  // Filtering and paging happen on the backend; every change reloads the page.
+  // Filtering and paging happen on the backend; "ძიება" or a page change reloads the page.
   useEffect(() => {
     let active = true
 
@@ -72,7 +72,8 @@ export function ApplicationsManagement() {
     <div className="space-y-4">
       <ApplicationsFilters
         value={query.filters}
-        onChange={(filters) => changeQuery({ filters })}
+        loading={loading}
+        onSearch={(filters) => changeQuery({ filters })}
         action={
           canCreate ? (
             <Button asChild type="button" className="h-10 w-full sm:w-auto">
@@ -89,7 +90,7 @@ export function ApplicationsManagement() {
         <div className="rounded-xl border border-dashed bg-card px-6 py-10 text-center">
           <p className="text-base font-medium text-destructive sm:text-lg">შეცდომა</p>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">{error}</p>
-          <Button variant="outline" className="mt-4 h-10" onClick={() => changeQuery({ filters: EMPTY_APPLICATION_FILTERS })}>
+          <Button variant="outline" className="mt-4 h-10" onClick={() => changeQuery({ filters: defaultApplicationFilters() })}>
             ფილტრების გასუფთავება
           </Button>
         </div>

@@ -16,6 +16,10 @@ export const API_ROUTES = {
         branch: (branchId: string) => `/api/admin/branches/${branchId}`,
         auditEvents: "/api/admin/audit-events",
     },
+    dashboard: {
+        applications: "/api/dashboard/applications",
+        admin: "/api/dashboard/admin",
+    },
     notifications: {
         index: "/api/notifications",
         unreadCount: "/api/notifications/unread-count",

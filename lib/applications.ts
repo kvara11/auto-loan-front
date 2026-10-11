@@ -5,6 +5,7 @@ import {
   type HistoryEntry,
 } from "@/components/applications/applications-types"
 import { api } from "@/lib/axios"
+import { recentDateRange } from "@/lib/format"
 import { type PageMeta } from "@/lib/pagination"
 
 export const APPLICATIONS_URL = "/api/applications"
@@ -13,6 +14,9 @@ export const APPLICATIONS_URL = "/api/applications"
 export type ApplicationFilters = { status: string; start_date: string; end_date: string; search: string }
 
 export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "", search: "" }
+
+// The list page opens on the last week (a big scope would be slow to count and page); "გასუფთავება" goes back to it.
+export const defaultApplicationFilters = (): ApplicationFilters => ({ ...EMPTY_APPLICATION_FILTERS, ...recentDateRange() })
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
@@ -26,13 +30,7 @@ async function getList(params: Record<string, string | number>) {
   return { applications: Array.isArray(response.data) ? response.data : (response.data?.applications ?? []), meta: response.meta }
 }
 
-// The backend already limits the list to the user's data scope (own / branch / submitted / all)
-// and applies the filters. Without page/per_page it returns the whole scope (dashboard counts).
-export async function fetchApplications(filters: ApplicationFilters = EMPTY_APPLICATION_FILTERS): Promise<ApplicationRecord[]> {
-  return (await getList(filterParams(filters))).applications
-}
-
-// One page of the list (GET /api/applications?page=&per_page=) with meta {current_page, per_page, total, last_page}.
+// One page of the list, already limited by the backend to the user's data scope and filtered (GET /api/applications?page=&per_page=) with meta {current_page, per_page, total, last_page}.
 export async function fetchApplicationsPage(filters: ApplicationFilters, page: number, perPage: number) {
   const { applications, meta } = await getList({ ...filterParams(filters), page, per_page: perPage })
   const fallback: PageMeta = { current_page: page, per_page: perPage, total: applications.length, last_page: 1 }

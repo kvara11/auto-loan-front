@@ -76,7 +76,7 @@ export function useApplicationWizard(applicationId?: string) {
     })
   }
 
-  // "სხვა კლიენტი": clears the client fields and starts a new lookup.
+  // "კლიენტის მოხსნა": takes the client off this form (the client itself isn't touched) and starts a new lookup.
   const resetClient = () => {
     client.reset()
     setForm((current) => ({ ...current, ...Object.fromEntries(CLIENT_FIELDS.map((field) => [field, DEFAULT_FORM[field]])) }))

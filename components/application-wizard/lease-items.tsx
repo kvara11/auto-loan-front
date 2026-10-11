@@ -3,16 +3,14 @@
 import { Plus, Trash2 } from "lucide-react"
 
 import { EMPTY_LEASE_ITEM, type CardProps, type LeaseItem } from "@/components/application-wizard/wizard-form"
-import { CURRENCY_OPTIONS } from "@/components/application-wizard/wizard-options"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 const COLUMNS: Array<{ key: Exclude<keyof LeaseItem, "currency">; label: string; numeric?: boolean }> = [
   { key: "address", label: "მისამართი" },
   { key: "duration", label: "ხანგრძლივობა" },
-  { key: "amount", label: "თანხა", numeric: true },
+  { key: "amount", label: "თანხა (GEL)", numeric: true },
   { key: "cadastral", label: "საკადასტრო კოდი" },
 ]
 
@@ -36,7 +34,7 @@ export function LeaseItems({ form, errors, set }: CardProps) {
         <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">საიჯარო ობიექტები არ არის დამატებული</p>
       ) : (
         items.map((item, index) => (
-          <div key={index} className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/40 p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_88px_1fr_auto] lg:items-end">
+          <div key={index} className="grid grid-cols-1 gap-3 rounded-lg border bg-muted/40 p-3 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_auto] lg:items-end">
             {COLUMNS.map(({ key, label, numeric }) => (
               <div key={key} className="flex flex-col gap-1.5">
                 <Label htmlFor={`lease-${index}-${key}`} className="text-xs">{label}</Label>
@@ -49,15 +47,6 @@ export function LeaseItems({ form, errors, set }: CardProps) {
                 />
               </div>
             ))}
-            <div className="flex flex-col gap-1.5 lg:order-none">
-              <Label className="text-xs">ვალუტა</Label>
-              <Select value={item.currency} onValueChange={(currency) => update(index, { currency })}>
-                <SelectTrigger className="h-10 bg-card" aria-label="ვალუტა"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {CURRENCY_OPTIONS.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
             <Button type="button" variant="ghost" size="icon" className="size-10 text-destructive hover:text-destructive" aria-label="წაშლა"
               onClick={() => set("lease_income_items", items.filter((_, i) => i !== index))}>
               <Trash2 className="size-4" />

@@ -65,10 +65,11 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 
 ### Dashboard (`components/dashboard-home/*`)
 
-12. **Officer** (`credit.officer`): KPIs — "მიმდინარე სესხები" and "თვის გაცემები" show "—" + "მალე", "დამუშავების პროცესში" shows the number of own Draft/Submitted/Returned applications; status bars count own applications; "ჩემი მონახაზები" lists own Draft/Returned (max 5); "ბოლო განაცხადები" the latest 5.
+11. **Counted on the server.** Opening the dashboard calls only `GET /api/dashboard/applications` (administrator: `GET /api/dashboard/admin`), never `GET /api/applications`; the numbers match the list with no date filter.
+12. **Officer** (`credit.officer`): KPIs — "მიმდინარე სესხები" and "თვის გაცემები" show "—" + "მალე", "დამუშავების პროცესში" shows the number of own Draft/Submitted/Returned applications; status bars count own applications; "ჩემი მონახაზები" lists own Draft/Returned (max 5, the total top right, "5 / N" when there are more); "ბოლო განაცხადები" the latest 5. A super-admin's "ჩემი მონახაზები" shows only their own, not everyone's drafts.
 13. **Risk manager**: the role block is "რიგი — გაგზავნილი განაცხადები" (Submitted to Risks only); counts cover non-Draft applications of every branch.
 14. **Branch manager / auditor**: no role block; counts cover their scope.
-15. **Administrator**: no application blocks; two cards with user and branch counts that link to the admin pages.
+15. **Administrator**: no application blocks; two cards — users (all, deactivated included) and branches, each with "N აქტიური" — that link to the admin pages.
 16. **States**: skeleton while loading; the API error in a red banner; with no applications the recent list says "განაცხადები ვერ მოიძებნა".
 17. **Mobile (375px)**: KPIs stack as rows, the recent list becomes compact rows (number · client, amount · car, status); no horizontal scroll.
 
@@ -175,10 +176,10 @@ Files: `app/dashboard/branches/page.tsx`, `components/branches/*`.
 Files: `app/dashboard/audit/page.tsx`, `components/audit/*`, `lib/audit.ts`, `components/shared/*`.
 
 1. **Menu.** Super-admin, administrator and auditor see "ცვლილებების ჟურნალი" under "ადმინისტრაცია" (the auditor sees only this item there). Officers, risk and branch managers don't; opening `/dashboard/audit` shows "ცვლილებების ჟურნალის ნახვის უფლება არ გაქვთ." (API 401).
-2. **Load.** `GET /api/admin/audit-events?page=1&per_page=50` → newest first: time, who (avatar + name; "სისტემაში შეუსვლელი" for a failed sign-in), action badge (red: failed sign-in, blocking, deletions; amber: password, settings; green: created/activated; blue: clients), subject (name + type), IP (from `lg`). No entries → "ჩანაწერები ვერ მოიძებნა".
+2. **Load.** The date filters open filled with the last week (today − 6 days … today), so the first request is `GET /api/admin/audit-events?start_date=…&end_date=…&page=1&per_page=50` → newest first: time, who (avatar + name; "სისტემაში შეუსვლელი" for a failed sign-in), action badge (red: failed sign-in, blocking, deletions; amber: password, settings; green: created/activated; blue: clients), subject (name + type), IP (from `lg`). No entries → "ჩანაწერები ვერ მოიძებნა".
 3. **Details.** Clicking a row (also with the keyboard: it's a button, `aria-expanded`) opens ველი | იყო | გახდა with Georgian field names; empty → "—", booleans → "კი/არა"; a permission change shows "+ name" / "− name" badges; password change and the reference-data update show "დამატებითი მონაცემები არ არის.". On mobile the rows stack and the details wrap (no horizontal scroll); the IP is shown under the details below `lg`.
 4. **What appears.** An admin edits a user → "მომხმარებელი შეიცვალა" with only the changed fields (role and branch by name); saving without changes adds nothing. An officer edits a client's phone → "კლიენტის მონაცემები შეიცვალა" with the old and new phone. A wrong password → "წარუმატებელი შესვლა" with the typed username and the reason. A successful sign-in, logout and own profile/avatar/preferences changes do **not** appear. A password never appears.
-5. **Filters.** Search (subject name or the actor's username, 350 ms debounce), action, subject type, date from/to; every change reloads from page 1; "გასუფთავება" resets all, including the search box. Invalid values → the backend's Georgian message.
+5. **Filters.** Search (subject name or the actor's username), action, subject type, date from/to. Changing them sends **nothing**; "ძიება" (or Enter in the search box) sends one request from page 1 (pressing it again reloads). "გასუფთავება" goes back to the defaults (empty search/selects, last week) and reloads; it's disabled while both the form and the applied filters are the defaults. Emptying both dates and searching shows the whole log. On one row at 1440 (selects, dates and buttons aligned); stacked on mobile with the two buttons side by side. Invalid values → the backend's Georgian message.
 6. **Pagination.** `TablePagination` with 25 / 50 / 100 per page.
 
 ## 5. Applications list, detail page and workflow
@@ -197,10 +198,11 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 8. **LTV warning.** A row with `ltv_warning` set shows the LTV in red with a pulsing dot whose tooltip holds the warning.
 9. **Responsive columns.** Secondary columns hide at the `md` and `lg` breakpoints.
 10. **Bad dates.** An unparseable date shows "—" (shared `formatDate`).
-10h. **Filters.** "სტატუსი" (ყველა სტატუსი + the five statuses) and "შექმნის თარიღი — დან / მდე" reload the list from the backend (`GET /api/applications?status=&start_date=&end_date=`, dates inclusive). The "to" date can't be set before the "from" date (`min`/`max`); the backend also rejects it with 424. "გასუფთავება" is disabled until a filter is set and resets all three. No match → "განაცხადები ვერ მოიძებნა". The date format follows the browser's locale.
-10i. **Personal ID search.** Typing in "პირადი ნომერი" reloads the list 350 ms after the last keystroke with `search=` (part of the client's personal ID, trimmed); it combines with the other filters and resets to page 1. "გასუფთავება" also empties the search box. `%` or `_` match literally (nothing, not everything).
+10g. **Default week.** The page opens with "შექმნის თარიღი" filled with the last week (today − 6 days … today); the first request is `GET /api/applications?start_date=…&end_date=…&page=1&per_page=20`. An application created earlier (e.g. one still waiting for the risk manager) appears only after widening or emptying the dates and pressing "ძიება".
+10h. **Filters.** "სტატუსი" (ყველა სტატუსი + the five statuses) and "შექმნის თარიღი — დან / მდე" are a draft: changing them sends **nothing**; "ძიება" sends one request (`status=&start_date=&end_date=`, dates inclusive) from page 1. The "to" date can't be set before the "from" date (`min`/`max`); the backend also rejects it with 424. "გასუფთავება" goes back to the defaults (no status, no search, last week) and reloads; it's disabled while both the form and the applied filters are the defaults. No match → "განაცხადები ვერ მოიძებნა". The date format follows the browser's locale.
+10i. **Personal ID search.** Typing in "პირადი ნომერი" sends nothing; "ძიება" or Enter sends `search=` (part of the client's personal ID, trimmed) together with the other filters, from page 1. "გასუფთავება" also empties the search box. `%` or `_` match literally (nothing, not everything).
 10j. **Pagination.** The list asks for `page=1&per_page=20`; below the table "ნაჩვენებია 1–20 / N", a page-size select (10 / 20 / 50) and ‹ / › buttons with "გვერდი / სულ". Previous is disabled on page 1, next on the last page; both are disabled while loading. Changing a filter or the page size returns to page 1. If the current page no longer exists after a reload, the last page loads. No results → no pagination bar.
-10k. **Layout.** Filters in two rows: search (max 24 rem, like every personal-ID input) + "ახალი განაცხადი" on the right (first on mobile); status, date from/to (narrow) and "გასუფთავება" below. The creation date is its own narrow column right of the status (from `xl`); the officer line uses the short name. At 1440 the table fits without clipping the "ოპერირება" column; long officer/branch lines wrap. ⚠ At 375 the table still clips the columns after "კლიენტი" (the container hides overflow); a card layout for mobile is not done yet.
+10k. **Layout.** Filters in two rows: search (max 24 rem, like every personal-ID input) + "ახალი განაცხადი" on the right (first on mobile); status, date from/to (narrow), "ძიება" and "გასუფთავება" below, bottoms aligned (on mobile the two buttons share a row). The creation date is its own narrow column right of the status (from `xl`); the officer line uses the short name. At 1440 the table fits without clipping the "ოპერირება" column; long officer/branch lines wrap. ⚠ At 375 the table still clips the columns after "კლიენტი" (the container hides overflow); a card layout for mobile is not done yet.
 10g. **Eye button.** Links to `/dashboard/applications/:id` (middle-click opens a new tab).
 
 ### Who sees what (data scope, enforced by the backend)
@@ -256,7 +258,7 @@ Files: `components/application-wizard/*` (`client-lookup-card.tsx`, `client-deta
 
 1. **Digits only.** The personal ID field accepts digits only, at most 11; "ძებნა" is disabled until 11 digits.
 2. **Automatic lookup.** Typing the 11th digit sends `GET /api/clients/personal/:pid` once; the field is read-only while it runs.
-3. **Client found.** Green "<name> — მოიძებნა" banner; all client fields, marital status, family members and the address-verified mark are filled; the summary shows the name. "სხვა კლიენტი" clears the client fields and unlocks the personal ID.
+3. **Client found.** Green "<name> — მოიძებნა" banner; all client fields, marital status, family members and the address-verified mark are filled; the summary shows the name. "კლიენტის მოხსნა" (outline, person-with-× icon; its tooltip says the client is taken off this application and the profile is not deleted) clears the client fields and unlocks the personal ID for a new lookup; nothing is sent to the backend.
 4. **Not found (404).** "კლიენტი ვერ მოიძებნა — შეავსეთ…" notice; the fields stay empty and editable; "სხვა ნომერი" resets.
 5. **Automatic address check.** "ავტომატური გადამოწმება" is disabled with "მალე"; the manual checkbox is saved and the backend records who/when.
 
@@ -273,7 +275,7 @@ Files: `income-card.tsx`, `income-panels.tsx`, `lease-items.tsx`, `loan-card.tsx
 
 ### Fields
 
-10. **Income type.** დასაქმებული / მეწარმე / იჯარა switch their panels; lease rows can be added (max 20) and removed; "დამატებითი შემოსავალი" shows its fields; the debtor-registry check is "მალე".
+10. **Income type.** დასაქმებული / მეწარმე / იჯარა switch their panels; lease rows can be added (max 20) and removed; "დამატებითი შემოსავალი" shows its fields; the debtor-registry check is "მალე". There is no currency choice anywhere: every amount is in GEL (labels say "(GEL)"; the backend rejects any other currency with 424).
 11. **Vehicle.** Makes, models, fuels and transmissions load from the vehicle-options proxy; the model select is disabled until a make is chosen and lists only that make's models; changing the make clears the model.
 12. **Display values.** Down-payment share "x.x% წილი"; LTV in the appraisal card and the summary (requested / market value); over the max LTV → red value and warning, saving is not blocked. Monthly payment is "— მალე".
 13. **Stepper.** Step 1 shows ✓ on step 2; "← წინა ნაბიჯი" returns to step 1 with the values kept.
@@ -289,7 +291,7 @@ Files: `income-card.tsx`, `income-panels.tsx`, `lease-items.tsx`, `loan-card.tsx
 ### Editing `/dashboard/applications/:id/edit`
 
 19. **Entry.** "რედაქტირება" on the detail page appears only for the officer's own Draft or Returned application.
-20. **Prefill.** Every field, the income snapshot and the client are filled; amounts that are 0 show empty; the personal ID is locked and there's no "სხვა კლიენტი".
+20. **Prefill.** Every field, the income snapshot and the client are filled; amounts that are 0 show empty; the personal ID is locked and there's no "კლიენტის მოხსნა".
 21. **Not editable.** A submitted/decided application, another officer's (404) or a non-officer → an explanation card with "უკან", no form.
 22. **Save.** Changes → PUT → detail page; history gains "რედაქტირებულია" (not when nothing changed). A Returned application can be fixed and sent to risks again.
 23. **Layout.** 1440: cards + sticky summary; 375: one column, summary and buttons at the end, no sideways scroll; both themes readable (tokens only).

@@ -7,20 +7,20 @@ import { AuditFilters } from "@/components/audit/audit-filters"
 import { AuditTable } from "@/components/audit/audit-table"
 import { TablePagination } from "@/components/shared/table-pagination"
 import { Button } from "@/components/ui/button"
-import { AUDIT_PAGE_SIZES, type AuditEvent, type AuditFilters as Filters, EMPTY_AUDIT_FILTERS, fetchAuditEvents } from "@/lib/audit"
+import { AUDIT_PAGE_SIZES, type AuditEvent, type AuditFilters as Filters, defaultAuditFilters, fetchAuditEvents } from "@/lib/audit"
 import { getApiErrorMessage } from "@/lib/axios"
 import { type PageMeta } from "@/lib/pagination"
 
 type Query = { filters: Filters; page: number; perPage: number }
 
-const INITIAL_QUERY: Query = { filters: EMPTY_AUDIT_FILTERS, page: 1, perPage: AUDIT_PAGE_SIZES[1] }
+const initialQuery = (): Query => ({ filters: defaultAuditFilters(), page: 1, perPage: AUDIT_PAGE_SIZES[1] })
 
 // The change log page (T-206): read-only, filtered and paged on the backend.
 export function AuditLog() {
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [actions, setActions] = useState<Record<string, string>>({})
   const [meta, setMeta] = useState<PageMeta>()
-  const [query, setQuery] = useState<Query>(INITIAL_QUERY)
+  const [query, setQuery] = useState<Query>(initialQuery)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>()
 
@@ -63,13 +63,13 @@ export function AuditLog() {
 
   return (
     <div className="space-y-4">
-      <AuditFilters value={query.filters} actions={actions} onChange={(filters) => changeQuery({ filters })} />
+      <AuditFilters value={query.filters} actions={actions} loading={loading} onSearch={(filters) => changeQuery({ filters })} />
 
       {error ? (
         <div className="rounded-xl border border-dashed bg-card px-6 py-10 text-center">
           <p className="text-base font-medium text-destructive sm:text-lg">შეცდომა</p>
           <p className="mt-2 text-sm text-muted-foreground sm:text-base">{error}</p>
-          <Button variant="outline" className="mt-4 h-10" onClick={() => changeQuery({ filters: EMPTY_AUDIT_FILTERS })}>
+          <Button variant="outline" className="mt-4 h-10" onClick={() => changeQuery({ filters: defaultAuditFilters() })}>
             ფილტრების გასუფთავება
           </Button>
         </div>

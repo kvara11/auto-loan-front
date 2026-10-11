@@ -42,3 +42,17 @@ export function formatDateTime(value: string | null | undefined) {
   const pad = (part: number) => String(part).padStart(2, "0")
   return `${day}, ${pad(date.getHours())}:${pad(date.getMinutes())}`
 }
+
+// Lists open on the last `days` days, today included: { start_date, end_date } as local "YYYY-MM-DD"
+// (toISOString would shift the date to UTC).
+export const RECENT_DAYS = 7
+
+export function recentDateRange(days = RECENT_DAYS) {
+  const iso = (date: Date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+  const today = new Date()
+  const start = new Date(today)
+  start.setDate(today.getDate() - (days - 1))
+
+  return { start_date: iso(start), end_date: iso(today) }
+}

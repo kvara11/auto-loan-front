@@ -1,4 +1,3 @@
-import { type ApplicationRecord } from "@/components/applications/applications-types"
 import { getStatusInfo, STATUS_ORDER } from "@/lib/application-status"
 
 const BAR_COLOR: Record<string, string> = {
@@ -9,11 +8,12 @@ const BAR_COLOR: Record<string, string> = {
   returned: "bg-status-returned",
 }
 
-export function StatusChart({ applications }: { applications: ApplicationRecord[] }) {
+// Counts per status come from the backend (GET /api/dashboard/applications).
+export function StatusChart({ counts: byStatus }: { counts: Record<string, number> }) {
   const counts = STATUS_ORDER.map((status) => ({
     status,
     info: getStatusInfo(status),
-    count: applications.filter((app) => app.status === status).length,
+    count: byStatus[status] ?? 0,
   }))
   const max = Math.max(1, ...counts.map((row) => row.count))
 

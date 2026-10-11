@@ -7,8 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { shortName, vehicleLabel } from "@/lib/applications"
 import { formatDate, formatMoney } from "@/lib/format"
 
-export function RecentApplications({ applications }: { applications: ApplicationRecord[] }) {
-  const recent = applications.slice(0, 5)
+// The backend sends the latest five of the user's scope.
+export function RecentApplications({ applications: recent }: { applications: ApplicationRecord[] }) {
 
   return (
     <section className="flex flex-col gap-3.5 rounded-xl border bg-card p-4 shadow-sm sm:p-[22px]">
