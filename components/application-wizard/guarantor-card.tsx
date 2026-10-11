@@ -14,9 +14,9 @@ export function GuarantorCard(props: CardProps) {
       {props.form.has_coborrower_guarantor ? (
         <>
           <FormInput {...props} name="co_borrower_name" label="თანამსესხებელი — სახელი, გვარი" />
-          <FormInput {...props} name="co_borrower_personal_id" label="თანამსესხებელი — პირადი ნომერი" inputMode="numeric" maxLength={11} className={PERSONAL_ID_WIDTH} />
+          <FormInput {...props} name="co_borrower_personal_id" label="თანამსესხებელი — პირადი ნომერი" digits maxLength={11} className={PERSONAL_ID_WIDTH} />
           <FormInput {...props} name="guarantor_name" label="თავდები — სახელი, გვარი" />
-          <FormInput {...props} name="guarantor_personal_id" label="თავდები — პირადი ნომერი" inputMode="numeric" maxLength={11} className={PERSONAL_ID_WIDTH} />
+          <FormInput {...props} name="guarantor_personal_id" label="თავდები — პირადი ნომერი" digits maxLength={11} className={PERSONAL_ID_WIDTH} />
         </>
       ) : null}
     </WizardSection>

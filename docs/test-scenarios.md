@@ -285,6 +285,7 @@ Files: `income-card.tsx`, `income-panels.tsx`, `lease-items.tsx`, `loan-card.tsx
 14. **"მონახაზად შენახვა".** Works with any subset of step 2 (only the client is required) → detail page, status "მონახაზი", the income card shows what was typed.
 15. **"გაგზავნა რისკებში", incomplete.** Banner "შეავსეთ მონიშნული ველები…" and "სავალდებულო ველი" on amount, term, rate, payment day, make, model, year, fuel, transmission and market value; no request.
 16. **"გაგზავნა რისკებში", complete.** Saves, submits → detail page with "გაგზავნილია რისკებში".
+16b. **Numbers only.** Amount, rate, term, payment day, year, engine, mileage, prices, market value, max LTV, counts, incomes and the lease amount are `type="number"`: letters (Georgian or Latin), `e`, `+` and `-` can't be typed; integers also refuse `.`; decimals accept one `.` (`12500.75`). No spin arrows; scrolling over a focused field doesn't change it. Personal IDs of the co-borrower/guarantor and the IE number keep only digits (`01a2b3` → `0123`) and keep leading zeros.
 17. **Backend errors.** A 424 (e.g. engine 13.5, payment day 32) appears under the field (`income.*` keys under the income fields, lease errors under the list) with the backend's Georgian message.
 18. **Numbers.** "24,500" is accepted (commas and spaces stripped); empty fields are sent as `null`.
 

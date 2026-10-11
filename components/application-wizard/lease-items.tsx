@@ -2,10 +2,14 @@
 
 import { Plus, Trash2 } from "lucide-react"
 
+import { numberInputProps } from "@/components/application-wizard/form-field"
 import { EMPTY_LEASE_ITEM, type CardProps, type LeaseItem } from "@/components/application-wizard/wizard-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
+
+const NUMBER = numberInputProps("decimal")
 
 const COLUMNS: Array<{ key: Exclude<keyof LeaseItem, "currency">; label: string; numeric?: boolean }> = [
   { key: "address", label: "მისამართი" },
@@ -40,10 +44,10 @@ export function LeaseItems({ form, errors, set }: CardProps) {
                 <Label htmlFor={`lease-${index}-${key}`} className="text-xs">{label}</Label>
                 <Input
                   id={`lease-${index}-${key}`}
-                  className="h-10 bg-card"
                   value={item[key]}
-                  inputMode={numeric ? "decimal" : undefined}
                   onChange={(event) => update(index, { [key]: event.target.value })}
+                  {...(numeric ? NUMBER : {})}
+                  className={cn("h-10 bg-card", numeric && NUMBER.className)}
                 />
               </div>
             ))}

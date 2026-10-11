@@ -41,14 +41,14 @@ export function VehicleCard(props: CardProps) {
     <WizardSection title="ავტომობილი" description="ინფორმაცია უზრუნველყოფის შესახებ.">
       <IdSelect {...bound} name="car_make_id" label="მარკა" items={options.makes} loading={loading} />
       <IdSelect {...bound} name="car_model_id" label="მოდელი" items={models} loading={loading} disabled={!props.form.car_make_id} />
-      <FormInput {...props} name="car_year" label="წელი" inputMode="numeric" maxLength={4} required />
-      <FormInput {...props} name="engine" label="ძრავი" inputMode="decimal" placeholder="მაგ: 1.8" />
+      <FormInput {...props} name="car_year" label="წელი" number="integer" required />
+      <FormInput {...props} name="engine" label="ძრავი" number="decimal" placeholder="მაგ: 1.8" />
       <IdSelect {...bound} name="fuel_type_id" label="საწვავის ტიპი" items={options.fuels} loading={loading} />
       <IdSelect {...bound} name="transmission_id" label="გადაცემათა კოლოფი" items={options.transmissions} loading={loading} />
-      <FormInput {...props} name="mileage_km" label="გარბენი (კმ)" inputMode="numeric" />
+      <FormInput {...props} name="mileage_km" label="გარბენი (კმ)" number="integer" />
       <FormInput {...props} name="vin" label="VIN კოდი" maxLength={17} className="[&_input]:uppercase" />
       <FormInput {...props} name="plate_number" label="სახელმწიფო ნომერი" maxLength={20} className="[&_input]:uppercase" />
-      <FormInput {...props} name="seller_price" label="გამყიდველის ფასი (GEL)" inputMode="decimal" placeholder="0.00" />
+      <FormInput {...props} name="seller_price" label="გამყიდველის ფასი (GEL)" number="decimal" placeholder="0.00" />
       <FormSelect {...props} name="customs_status" label="განბაჟება" options={CUSTOMS_OPTIONS} />
       <FormSelect {...props} name="vehicle_condition" label="მდგომარეობა" options={CONDITION_OPTIONS} />
     </WizardSection>

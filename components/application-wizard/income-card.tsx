@@ -14,7 +14,7 @@ export function IncomeCard(props: CardProps) {
   return (
     <WizardSection title="შემოსავლები და ვალდებულებები" description="ინფორმაცია ფინანსური მდგომარეობის შესახებ.">
       <FormSelect {...props} name="income_source_type" label="შემოსავლის ტიპი" options={INCOME_TYPE_OPTIONS} placeholder="აირჩიეთ ტიპი" />
-      <FormInput {...props} name="existing_liabilities" label="არსებული ვალდებულებები (GEL)" inputMode="decimal" placeholder="0.00" />
+      <FormInput {...props} name="existing_liabilities" label="არსებული ვალდებულებები (GEL)" number="decimal" placeholder="0.00" />
 
       {type === "employee" ? <EmployeeIncome {...props} /> : null}
       {type === "entrepreneur" ? <EntrepreneurIncome {...props} /> : null}

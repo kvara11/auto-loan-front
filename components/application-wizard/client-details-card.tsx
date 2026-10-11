@@ -17,7 +17,7 @@ export function ClientDetailsCard(props: CardProps) {
       <FormInput {...props} name="phone" label="ტელეფონი" placeholder="5XXXXXXXX" inputMode="tel" required />
       <FormInput {...props} name="email" label="ელ-ფოსტა" type="email" />
       <FormSelect {...props} name="marital_status" label="ოჯახური მდგომარეობა" options={MARITAL_OPTIONS} />
-      <FormInput {...props} name="family_members" label="ოჯახის წევრების რაოდენობა" inputMode="numeric" />
+      <FormInput {...props} name="family_members" label="ოჯახის წევრების რაოდენობა" number="integer" />
       <FormInput {...props} name="address" label="ფაქტიური მისამართი" />
       <FormInput {...props} name="legal_address" label="იურიდიული მისამართი" className="sm:col-span-2" />
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">

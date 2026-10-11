@@ -17,9 +17,9 @@ export function AppraisalCard(props: CardProps) {
 
   return (
     <WizardSection title="შეფასება" description="საბაზრო ღირებულება და LTV (საორიენტაციო).">
-      <FormInput {...props} name="market_value" label="საბაზრო ღირებულება (GEL)" inputMode="decimal" placeholder="0.00" required />
-      <FormInput {...props} name="comparable_count" label="ანალოგების რაოდენობა" inputMode="numeric" />
-      <FormInput {...props} name="max_ltv" label="მაქს. LTV %" inputMode="decimal" />
+      <FormInput {...props} name="market_value" label="საბაზრო ღირებულება (GEL)" number="decimal" placeholder="0.00" required />
+      <FormInput {...props} name="comparable_count" label="ანალოგების რაოდენობა" number="integer" />
+      <FormInput {...props} name="max_ltv" label="მაქს. LTV %" number="decimal" />
       <Field id="ltv" label="LTV">
         <div className={cn("flex h-10 items-center gap-2 rounded-lg border px-3 text-sm font-semibold tabular-nums", over ? "border-destructive/40 bg-destructive/10 text-destructive" : "bg-muted")}>
           {ltv === null ? "—" : `${ltv.toFixed(1)}%`}
