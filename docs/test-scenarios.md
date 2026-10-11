@@ -72,6 +72,18 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 16. **States**: skeleton while loading; the API error in a red banner; with no applications the recent list says "განაცხადები ვერ მოიძებნა".
 17. **Mobile (375px)**: KPIs stack as rows, the recent list becomes compact rows (number · client, amount · car, status); no horizontal scroll.
 
+## 2b. Notifications (T-507)
+
+Files: `components/dashboard/notification-bell.tsx`, `components/dashboard/use-notifications.ts`, `lib/notifications.ts`, `public/sounds/notification.wav`.
+
+1. **Who sees the bell.** Users with any `applications.view.*` (officer, risk and branch managers, auditor, super-admin); not the administrator.
+2. **Submit.** An officer sends an application to risks → within 30 s (or when the window regains focus) every risk manager's bell shows "1" and the chime plays once. The officer gets nothing for their own action. There is no setting to turn notifications off (only the sound).
+3. **Decision.** The risk manager returns / approves / rejects → the officer's bell shows it; return and reject show the reason in quotes.
+4. **List.** Clicking the bell lists the latest 20: unread ones are bold with a dot; "შეტყობინებები არ არის" when empty. "ყველას წაკითხულად მონიშვნა" clears the badge.
+5. **Open.** Clicking a notification marks it read (badge −1) and opens the application's page.
+6. **Sound.** Plays only for a newer unread notification, not again after a page change or reload in the same tab; never when "ხმოვანი სიგნალი" is off in settings (takes effect right after saving). The browser may stay silent until the user has clicked something on the page.
+7. **Mobile.** At 375 the menu fits the screen (max width = screen − 2 rem), no horizontal scroll.
+
 ## 3. Settings
 
 Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferences-section.tsx`, `security-section.tsx`, `settings-section.tsx`, `lib/settings.ts`, `lib/ui-preferences.ts`, `components/theme-sync.tsx`.
@@ -82,7 +94,7 @@ Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferen
 
 ### Load
 
-1. **Load.** `GET /api/settings` → `data.profile` (`first_name`, `last_name`, `username`, `email`) and `data.preferences` (`theme`, `sidebar_collapsed`, `notifications`, `alert_sound`, already typed with defaults). A spinner shows while loading.
+1. **Load.** `GET /api/settings` → `data.profile` (`first_name`, `last_name`, `username`, `email`) and `data.preferences` (`theme`, `sidebar_collapsed`, `alert_sound`, already typed with defaults). A spinner shows while loading.
 2. **Load fails.** An error banner is shown and no section is rendered, so nothing can be saved over the backend values.
 3. **Three sections, top to bottom:** "პირადი ინფორმაცია", "ინტერფეისის პარამეტრები", "უსაფრთხოება". On mobile they stack at full width.
 
@@ -100,7 +112,7 @@ Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferen
 ### Interface preferences (own save button)
 
 9. **Button disabled until a change.** Changing the theme or a toggle enables "შენახვა"; switching back disables it.
-10. **Applied on save only.** Theme and compact sidebar take effect after saving (`PUT /api/settings/preferences` with `{ preferences: { theme, sidebar_collapsed, notifications } }`), not while editing. The values are also written to `localStorage`, so other open tabs switch through the `storage` event.
+10. **Applied on save only.** Theme and compact sidebar take effect after saving (`PUT /api/settings/preferences` with `{ preferences: { theme, sidebar_collapsed, alert_sound } }`), not while editing. The values are also written to `localStorage`, so other open tabs switch through the `storage` event.
 11. **Saved values on reload.** The page loads with the saved theme and toggles.
     **Known issue:** a saved dark theme still flashes light briefly, because `ThemeSync` runs in an effect after first paint.
 12. **Independent saves.** Saving one section doesn't send or reset the other section's unsaved changes.

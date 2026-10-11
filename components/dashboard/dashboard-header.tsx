@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Menu } from "lucide-react"
 
+import { NotificationBell } from "@/components/dashboard/notification-bell"
 import { ThemeToggle } from "@/components/dashboard/theme-toggle"
 import { UserMenu } from "@/components/dashboard/user-menu"
 import { Button } from "@/components/ui/button"
@@ -34,8 +35,9 @@ export function DashboardHeader({ title, breadcrumb, onOpenMobileMenu }: Dashboa
         <h1 className="truncate text-base font-semibold sm:text-[17px]">{title}</h1>
       </div>
 
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-3">
         <ThemeToggle />
+        <NotificationBell />
         <UserMenu />
       </div>
     </header>

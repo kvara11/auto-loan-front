@@ -16,7 +16,6 @@ export type ProfileInfo = {
 export type Preferences = {
   theme: SettingsTheme
   sidebar_collapsed: boolean
-  notifications: boolean
   alert_sound: boolean
 }
 

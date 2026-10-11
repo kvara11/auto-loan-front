@@ -33,6 +33,8 @@ export type AuthUser = {
     branch: { id: number; code: string; name: string } | null
     permissions: string[]
     modules: AppModule[]
+    // From the backend's preferences; alert_sound (T-507) plays the notification sound (1 = on).
+    settings?: { sidebar_collapsed: number; alert_sound: number }
 }
 
 export function saveAuthUser(user: AuthUser) {

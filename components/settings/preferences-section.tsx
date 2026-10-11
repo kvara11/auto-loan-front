@@ -1,18 +1,19 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { Bell, PanelLeft, Save } from "lucide-react"
+import { PanelLeft, Save, Volume2 } from "lucide-react"
 
 import { useDashboardShellState } from "@/components/dashboard/dashboard-shell-state"
 import { FormNotice, SettingsSection } from "@/components/settings/settings-section"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getAuthUser, saveAuthUser } from "@/lib/auth-storage"
 import { getApiErrorMessage } from "@/lib/axios"
 import { updatePreferences, type Preferences } from "@/lib/settings"
 import { applyTheme, setStoredSidebarCollapsed, setStoredTheme } from "@/lib/ui-preferences"
 
-const EDITABLE_KEYS = ["theme", "sidebar_collapsed", "notifications"] as const
+const EDITABLE_KEYS = ["theme", "sidebar_collapsed", "alert_sound"] as const
 
 export function PreferencesSection({ preferences }: { preferences: Preferences }) {
   const shell = useDashboardShellState()
@@ -31,8 +32,8 @@ export function PreferencesSection({ preferences }: { preferences: Preferences }
     setSaving(true)
     setNotice(undefined)
     try {
-      const { theme, sidebar_collapsed, notifications } = draft
-      const response = await updatePreferences({ theme, sidebar_collapsed, notifications })
+      const { theme, sidebar_collapsed, alert_sound } = draft
+      const response = await updatePreferences({ theme, sidebar_collapsed, alert_sound })
       const next = response.preferences ?? draft
 
       setSaved(next)
@@ -42,6 +43,11 @@ export function PreferencesSection({ preferences }: { preferences: Preferences }
       setStoredTheme(next.theme)
       setStoredSidebarCollapsed(next.sidebar_collapsed)
       shell?.setCollapsed(next.sidebar_collapsed)
+      // The bell reads the sound setting from the cached user.
+      const user = getAuthUser()
+      if (user) {
+        saveAuthUser({ ...user, settings: { sidebar_collapsed: next.sidebar_collapsed ? 1 : 0, alert_sound: next.alert_sound ? 1 : 0 } })
+      }
       setNotice({ tone: "success", text: response.message || "პარამეტრები შენახულია." })
     } catch (error) {
       setNotice({ tone: "error", text: getApiErrorMessage(error) || "პარამეტრების შენახვა ვერ მოხერხდა." })
@@ -53,7 +59,7 @@ export function PreferencesSection({ preferences }: { preferences: Preferences }
   return (
     <SettingsSection
       title="ინტერფეისის პარამეტრები"
-      description="თემა, შეტყობინებები და გვერდითი მენიუს ხედი."
+      description="თემა, ხმოვანი სიგნალი და გვერდითი მენიუს ხედი."
       footer={
         <Button type="button" className="h-10" disabled={!isDirty || saving} onClick={handleSave}>
           <Save className="size-4" />
@@ -75,11 +81,11 @@ export function PreferencesSection({ preferences }: { preferences: Preferences }
       </div>
 
       <ToggleRow
-        icon={<Bell className="text-muted-foreground size-4" />}
-        title="შეტყობინებები"
-        description="სისტემური შეტყობინებები"
-        active={draft.notifications}
-        onToggle={() => update("notifications", !draft.notifications)}
+        icon={<Volume2 className="text-muted-foreground size-4" />}
+        title="ხმოვანი სიგნალი"
+        description="ხმა ახალი შეტყობინების მოსვლისას"
+        active={draft.alert_sound}
+        onToggle={() => update("alert_sound", !draft.alert_sound)}
       />
       <ToggleRow
         icon={<PanelLeft className="text-muted-foreground size-4" />}
