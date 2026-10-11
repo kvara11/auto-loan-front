@@ -86,7 +86,7 @@ export function formatAuditValue(key: string, value: unknown): string {
 // Badge tone by kind of action (never color alone: the label is always shown).
 export function actionVariant(action: string) {
   if (action === "login_failed" || action === "user_deactivated" || action.endsWith("_deleted") || action.endsWith("_removed")) return "destructive"
-  if (action === "password_changed" || action === "global_setting_updated") return "warning"
+  if (action === "password_changed" || action === "user_password_reset" || action === "global_setting_updated") return "warning"
   if (action.endsWith("_created") || action === "user_activated") return "success"
   if (action.startsWith("client_")) return "info"
   return "secondary"

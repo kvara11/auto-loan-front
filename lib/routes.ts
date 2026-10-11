@@ -12,6 +12,7 @@ export const API_ROUTES = {
         roles: "/api/admin/roles",
         userActivation: (userId: string) => `/api/admin/users/${userId}/activation`,
         userAvatar: (userId: string) => `/api/admin/users/${userId}/avatar`,
+        userPassword: (userId: string) => `/api/admin/users/${userId}/password`,
         branches: "/api/admin/branches",
         branch: (branchId: string) => `/api/admin/branches/${branchId}`,
         auditEvents: "/api/admin/audit-events",

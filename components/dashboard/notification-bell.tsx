@@ -62,6 +62,7 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label={unreadCount ? `შეტყობინებები, წაუკითხავი: ${unreadCount}` : "შეტყობინებები"}
+          title="შეტყობინებები"
           className="relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <Bell className="size-5" />

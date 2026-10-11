@@ -51,7 +51,7 @@ export function LeaseItems({ form, errors, set }: CardProps) {
                 />
               </div>
             ))}
-            <Button type="button" variant="ghost" size="icon" className="size-10 text-destructive hover:text-destructive" aria-label="წაშლა"
+            <Button type="button" variant="ghost" size="icon" className="size-10 text-destructive hover:text-destructive" aria-label="ობიექტის წაშლა" title="ობიექტის წაშლა"
               onClick={() => set("lease_income_items", items.filter((_, i) => i !== index))}>
               <Trash2 className="size-4" />
             </Button>

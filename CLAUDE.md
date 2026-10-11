@@ -81,6 +81,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - `user-form-schema.ts` mirrors the backend rules (username `[A-Za-z0-9._-]`, password ≥8 + confirmation on create). A branch is required for `credit-officer` and `branch-manager` (`BRANCH_REQUIRED_ROLES`); other roles get a "ფილიალის გარეშე" option. Only active branches are offered, plus the user's current one.
 - Dialog forms show backend 424 errors on their fields with `getApiFieldErrors()` + `form.setError`, and other errors in a banner (pattern used by `user-form-dialog.tsx` and `branch-form-dialog.tsx`).
 - Filtering and pagination are client-side. The default status filter is `"active"`, so inactive users start hidden.
+- **Password reset (T-208):** `reset-password-dialog.tsx` — the key button in each row (not for a super-admin) opens a dialog: new password + confirmation (client check: ≥ 8 and equal; the backend's 424 messages land on the fields), "გენერირება" (14 characters from `crypto.getRandomValues`, at least one upper, lower, digit and symbol; shows it), "ჩვენება/დამალვა". `POST /api/admin/users/:id/password`; on success the dialog shows the backend message and the new password to hand over. The user is signed out everywhere.
 - **Avatars (T-207):** `UserAvatar` (`components/dashboard/user-avatar.tsx`; image from `avatarSrc(avatar_url)`, initials as fallback) is used in the first table column ("მომხმარებელი": avatar, full name and email below it; it replaced the first-name, last-name and email columns so the table fits at 1440), in the top-bar `UserMenu` and in settings. The edit dialog shows `AvatarModeration` ("ავატარის წაშლა" with confirmation → `DELETE /api/admin/users/:id/avatar`); its removed state is local so the form being edited isn't reset. Avatar images are direct API links, so like attachments they load only from `127.0.0.1:3000` (cookie).
 
 ### Change log (`components/audit/`, `/dashboard/audit`, T-206)
@@ -139,6 +140,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - Empty or loading block: `flex min-h-65 items-center justify-center rounded-xl border border-dashed` (as in `users-table.tsx`).
   - Tables: wrap them in `rounded-xl border`, and hide secondary columns with `hidden md:table-cell` and its `lg:`/`xl:` variants (as in `applications-table.tsx`).
   - Links styled as buttons: `<Button asChild><Link …/></Button>`.
+  - Icon-only buttons and links get both `aria-label` and a short Georgian `title` (the browser tooltip; there is no Tooltip component), e.g. "რედაქტირება", "პაროლის აღდგენა", "გაუქმება"/"აღდგენა", "წინა გვერდი".
   - Merge classes with `cn()` from `@/lib/utils`.
 - **Oversized files:** several feature components are far past the 150-line guideline, such as `users-management.tsx` (~330). Don't treat their size or their hardcoded colors as the norm.
 

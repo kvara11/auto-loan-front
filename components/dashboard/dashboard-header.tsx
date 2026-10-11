@@ -20,7 +20,7 @@ export function DashboardHeader({ title, breadcrumb, onOpenMobileMenu }: Dashboa
   return (
     <header className="flex h-16 shrink-0 items-center justify-between gap-3 border-b bg-card px-4 sm:px-6 lg:px-7">
       <div className="flex min-w-0 items-center gap-2">
-        <Button variant="ghost" size="icon" className="size-10 lg:hidden" aria-label="მენიუ" onClick={onOpenMobileMenu}>
+        <Button variant="ghost" size="icon" className="size-10 lg:hidden" aria-label="მენიუ" title="მენიუ" onClick={onOpenMobileMenu}>
           <Menu className="size-5" />
         </Button>
 

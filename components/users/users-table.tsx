@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { ResetPasswordDialog } from "@/components/users/reset-password-dialog"
 import { type UserRecord } from "@/components/users/users-types"
 
 type UsersTableProps = {
@@ -102,17 +103,21 @@ export function UsersTable({ users, loading, onEdit, onToggleStatus, togglingUse
                     size="icon"
                     className="size-9"
                     aria-label="რედაქტირება"
+                    title="რედაქტირება"
                     onClick={() => onEdit(user)}
                     disabled={user.status !== "active"}
                   >
                     <Edit className="size-3.5" />
                   </Button>
+                  {/* The backend refuses a super-admin (CANNOT_EDIT_SUPER_ADMIN). */}
+                  {user.role === "super-admin" ? null : <ResetPasswordDialog user={user} />}
                   <Button
                     type="button"
                     variant="outline"
                     size="icon"
                     onClick={() => onToggleStatus(user.id)}
                     aria-label={user.status === "active" ? "გაუქმება" : "აღდგენა"}
+                    title={user.status === "active" ? "გაუქმება" : "აღდგენა"}
                     disabled={togglingUserId === user.id}
                     className={`size-9 ${user.status === "active" ? "text-destructive hover:text-destructive" : "text-success hover:text-success"}`}
                   >

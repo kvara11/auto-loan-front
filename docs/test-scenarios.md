@@ -160,6 +160,20 @@ Files: `components/users/*`.
 14b. **Avatar moderation.** The edit dialog shows the user's avatar; with one, "ავატარის წაშლა" → confirmation → removed, the dialog shows "ავატარი არ არის ატვირთული", the row shows initials, and unsaved edits in the form are kept.
 15. **Delete.** The delete button is commented out in `users-table.tsx`, and `handleDelete` only changes local state. Add scenarios here once delete is wired to the backend.
 
+### Password reset (T-208)
+
+1. **Button.** Every row except a super-admin has a key button ("პაროლის აღდგენა" on hover); deactivated users too.
+2. **Dialog.** Title "პაროლის აღდგენა", the user's name and username, a warning that they'll be signed out everywhere; new password, confirmation, "გენერირება", "ჩვენება/დამალვა", the policy line.
+3. **Client checks.** Under 8 characters → "პაროლი უნდა შეიცავდეს მინიმუმ 8 სიმბოლოს."; different confirmation → "პაროლები არ ემთხვევა." Nothing is sent.
+4. **Backend checks.** `abcdefgh1` → the backend's Georgian 424 under the field (mixed case / symbol); the password doesn't change.
+5. **Generate.** Fills both fields with the same 14-character password (upper, lower, digit, symbol) and shows it.
+6. **Success.** Green "პაროლი აღდგა. მომხმარებელი ყველა მოწყობილობიდან გამოვიდა.", the new password shown (selectable) and "დახურვა". The user's open sessions get 401; they sign in with the new password. The change log shows "პაროლი აღადგინა ადმინისტრატორმა" (amber) with no values.
+7. **Mobile.** At 375 the dialog fits; buttons stack.
+
+### Tooltips
+
+8. Every icon-only button shows a short Georgian tooltip on hover (users: რედაქტირება / პაროლის აღდგენა / გაუქმება or აღდგენა; branches: რედაქტირება / გათიშვა or გააქტიურება; pagination, top bar, attachments, lease row delete).
+
 ## 4b. Branches admin
 
 Files: `app/dashboard/branches/page.tsx`, `components/branches/*`.

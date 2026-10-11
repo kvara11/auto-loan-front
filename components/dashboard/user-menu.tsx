@@ -46,6 +46,7 @@ export function UserMenu() {
         <button
           type="button"
           aria-label="მომხმარებლის მენიუ"
+          title="პროფილი და პარამეტრები"
           className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
           <UserAvatar user={user} className="cursor-pointer" />

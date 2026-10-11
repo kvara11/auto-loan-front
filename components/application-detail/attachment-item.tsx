@@ -26,7 +26,7 @@ export function AttachmentItem({ applicationId, attachment, onDelete }: Attachme
 
   return (
     <li className="flex items-center gap-3 rounded-lg border p-2.5">
-      <a href={preview} target="_blank" rel="noreferrer" className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted" aria-label={`გახსნა: ${attachment.file_name}`}>
+      <a href={preview} target="_blank" rel="noreferrer" className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-md bg-muted" aria-label={`გახსნა: ${attachment.file_name}`} title="გახსნა">
         {isImage(attachment) ? (
           // A private file served by the API with the auth cookie; next/image can't optimize it.
           // eslint-disable-next-line @next/next/no-img-element

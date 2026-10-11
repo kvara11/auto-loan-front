@@ -71,6 +71,7 @@ export function BranchesTable({ branches, loading, togglingId, onEdit, onToggleA
                     className="h-10"
                     onClick={() => onEdit(branch)}
                     aria-label="რედაქტირება"
+                    title="რედაქტირება"
                   >
                     <Edit className="size-4" />
                   </Button>
@@ -81,6 +82,7 @@ export function BranchesTable({ branches, loading, togglingId, onEdit, onToggleA
                     onClick={() => onToggleActive(branch)}
                     disabled={togglingId === branch.id}
                     aria-label={branch.is_active ? "გათიშვა" : "გააქტიურება"}
+                    title={branch.is_active ? "გათიშვა" : "გააქტიურება"}
                   >
                     <Power className="size-4" />
                   </Button>
