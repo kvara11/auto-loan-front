@@ -63,15 +63,18 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 10a. **Theme toggle.** ☀/☾ switches the theme at once, saves it (`PUT /api/settings/preferences`) and keeps it after a reload; the settings page shows the same value.
 11. **Unknown URL.** The 404 page ("გვერდი ვერ მოიძებნა", link back to the dashboard) renders inside the dashboard shell.
 
-### Dashboard (`components/dashboard-home/*`)
+### Dashboard (`components/dashboard-home/*`, `lib/dashboard/*`)
 
-11. **Counted on the server.** Opening the dashboard calls only `GET /api/dashboard/applications` (administrator: `GET /api/dashboard/admin`), never `GET /api/applications`; the numbers match the list with no date filter.
-12. **Officer** (`credit.officer`): KPIs — "მიმდინარე სესხები" and "თვის გაცემები" show "—" + "მალე", "დამუშავების პროცესში" shows the number of own Draft/Submitted/Returned applications; status bars count own applications; "ჩემი მონახაზები" lists own Draft/Returned (max 5, the total top right, "5 / N" when there are more); "ბოლო განაცხადები" the latest 5. A super-admin's "ჩემი მონახაზები" shows only their own, not everyone's drafts.
-13. **Risk manager**: the role block is "რიგი — გაგზავნილი განაცხადები" (Submitted to Risks only); counts cover non-Draft applications of every branch.
-14. **Branch manager / auditor**: no role block; counts cover their scope.
-15. **Administrator**: no application blocks; two cards — users (all, deactivated included) and branches, each with "N აქტიური" — that link to the admin pages.
-16. **States**: skeleton while loading; the API error in a red banner; with no applications the recent list says "განაცხადები ვერ მოიძებნა".
-17. **Mobile (375px)**: KPIs stack as rows, the recent list becomes compact rows (number · client, amount · car, status); no horizontal scroll.
+11. **Counted on the server.** Opening the dashboard calls only `GET /api/dashboard/overview?period=30d` (administrator: `GET /api/dashboard/admin`), never the applications list.
+12. **Period switcher.** დღეს · 7 დღე · 30 დღე · ეს თვე · კვარტალი · წელი · შუალედი — Tabs on desktop, a Select on phones. A choice updates the URL (`?period=7d`), sends one request and every block (KPIs, funnel, statuses, trend, insights, team, the report's highlighted row) follows. "შუალედი" adds two date fields (default: the last 30 days); reloading the page keeps the period.
+13. **KPIs.** Big number, ▲/▼ + value vs the previous period (% for counts and ₾, პ.პ. for the approval rate, absolute for the queue "გუშინდელთან" and hours), sparkline. Colour means good/bad: the queue and the decision time going down is green. A previous period of 0 shows "წინა: 0". "გაცემული თანხა" is dashed, "—" + "მალე", never a number. The portfolio row (აქტიური პორტფელი, PAR 30, ვადაგადაცილება) is faded with "მალე".
+14. **Officer** (`credit.officer`): own numbers only; "ჩემი მონახაზები და დაბრუნებულები" near the top — returned first with "რისკები: <reason>" and "გასწორება" (→ edit), drafts with what is missing and "გაგრძელება"; no team block.
+15. **Risk manager**: the queue first (oldest first; wait chip > 48 h red, 24–48 h amber; LTV over the limit red; "განხილვა" opens it) with four KPIs beside it: რიგში, დღეს გადაწყვეტილი, საშუალო დრო, დამტკიცების %.
+16. **Branch manager / auditor / super-admin**: the full layout with "გუნდი — ოფიცრების რეიტინგი" (rank, avatar, applications, ₾ with a bar, approval %, return % — above 15% a warning chip "· მაღალი"). No branch comparison exists anywhere.
+17. **Trend.** Grouped bars შექმნილი / გაგზავნილი / გადაწყვეტილი (chart-1, chart-3, chart-2) and below a separate "დამტკიცებული თანხა, ₾" line; hovering either shows the same day in both (one tooltip, a dashed crosshair and a dot below). No dual y-axis.
+18. **Administrator**: no period switcher, no loan data — users (total, "N აქტიური", per role), branches, failed sign-ins in 24 h (masked IP, attempts chip), the latest change-log entries with "სრული ჟურნალი →".
+19. **States.** `?view=loading` → skeletons in every block; `?view=empty` → each block's own empty text ("მონახაზები ჯერ არ გაქვთ", "ყველაფერი რიგზეა ✓", "ამ პერიოდში მონაცემები არ არის"…); `?view=error` or a failed request → a red banner "მონაცემების განახლება ვერ მოხერხდა … თავიდან ცდა" while the last data stays visible; "თავიდან ცდა" reloads. `?mock=1&persona=manager|officer|risk` shows consistent mock data (KPIs, funnel, statuses and report add up).
+20. **Responsive.** 1440: the 12-column layout; ~768: KPIs in 4 columns, insight blocks in pairs; 375: KPIs 2 columns, blocks full width, the funnel horizontal, the leaderboard and the report as stacked rows, no horizontal scroll. Both themes.
 
 ## 2b. Notifications (T-507)
 

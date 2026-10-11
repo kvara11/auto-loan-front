@@ -18,7 +18,7 @@ export const API_ROUTES = {
         auditEvents: "/api/admin/audit-events",
     },
     dashboard: {
-        applications: "/api/dashboard/applications",
+        overview: "/api/dashboard/overview",
         admin: "/api/dashboard/admin",
     },
     notifications: {
