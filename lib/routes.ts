@@ -14,6 +14,7 @@ export const API_ROUTES = {
         userAvatar: (userId: string) => `/api/admin/users/${userId}/avatar`,
         branches: "/api/admin/branches",
         branch: (branchId: string) => `/api/admin/branches/${branchId}`,
+        auditEvents: "/api/admin/audit-events",
     },
     settings: {
         index: "/api/settings",

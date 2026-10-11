@@ -4,16 +4,19 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PAGE_SIZE_OPTIONS, type PageMeta } from "@/lib/applications"
+import { type PageMeta } from "@/lib/pagination"
 
-type ApplicationsPaginationProps = {
+type TablePaginationProps = {
   meta: PageMeta
+  // Page sizes offered in the select.
+  sizes: number[]
   disabled?: boolean
   onPageChange: (page: number) => void
   onPerPageChange: (perPage: number) => void
 }
 
-export function ApplicationsPagination({ meta, disabled, onPageChange, onPerPageChange }: ApplicationsPaginationProps) {
+// "ნაჩვენებია X–Y / N", page size and previous/next for a server-paginated list.
+export function TablePagination({ meta, sizes, disabled, onPageChange, onPerPageChange }: TablePaginationProps) {
   if (meta.total === 0) return null
 
   const from = (meta.current_page - 1) * meta.per_page + 1
@@ -32,7 +35,7 @@ export function ApplicationsPagination({ meta, disabled, onPageChange, onPerPage
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {PAGE_SIZE_OPTIONS.map((size) => (
+            {sizes.map((size) => (
               <SelectItem key={size} value={String(size)}>
                 {size}
               </SelectItem>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ApplicationsSearch } from "@/components/applications/applications-search"
+import { DebouncedSearch } from "@/components/shared/debounced-search"
 import { getStatusInfo, STATUS_ORDER } from "@/lib/application-status"
 import { EMPTY_APPLICATION_FILTERS, type ApplicationFilters } from "@/lib/applications"
 import { PERSONAL_ID_WIDTH } from "@/lib/utils"
@@ -33,7 +33,14 @@ export function ApplicationsFilters({ value, onChange, action }: ApplicationsFil
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         {action ? <div className="sm:order-last">{action}</div> : null}
         <div className={PERSONAL_ID_WIDTH}>
-          <ApplicationsSearch value={value.search} onChange={(search) => onChange({ ...value, search })} />
+          <DebouncedSearch
+            id="filter-search"
+            label="პირადი ნომერი"
+            placeholder="კლიენტის პირადი ნომერი"
+            inputMode="numeric"
+            value={value.search}
+            onChange={(search) => onChange({ ...value, search })}
+          />
         </div>
       </div>
 

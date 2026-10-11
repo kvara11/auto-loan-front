@@ -15,7 +15,7 @@ export function SettingsSection({ title, description, children, footer }: Settin
     <Card>
       <CardHeader className="space-y-1">
         <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
-        <CardDescription className="text-sm sm:text-base">{description}</CardDescription>
+        <CardDescription className="text-sm">{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">{children}</CardContent>
       {footer ? <CardFooter className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">{footer}</CardFooter> : null}

@@ -12,6 +12,7 @@ import {
   CheckCheck,
   Circle,
   FileText,
+  History,
   KeyRound,
   LayoutDashboard,
   Settings,
@@ -36,6 +37,7 @@ const iconMap: Record<string, LucideIcon> = {
   "key-round": KeyRound,
   settings: Settings,
   "building-2": Building2,
+  history: History,
 }
 
 // "/dashboard" only matches itself; other routes also match their sub-pages.

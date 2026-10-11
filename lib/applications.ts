@@ -5,6 +5,7 @@ import {
   type HistoryEntry,
 } from "@/components/applications/applications-types"
 import { api } from "@/lib/axios"
+import { type PageMeta } from "@/lib/pagination"
 
 export const APPLICATIONS_URL = "/api/applications"
 
@@ -12,8 +13,6 @@ export const APPLICATIONS_URL = "/api/applications"
 export type ApplicationFilters = { status: string; start_date: string; end_date: string; search: string }
 
 export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "", search: "" }
-
-export type PageMeta = { current_page: number; per_page: number; total: number; last_page: number }
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50]
 

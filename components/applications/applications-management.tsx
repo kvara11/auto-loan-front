@@ -12,12 +12,12 @@ import {
   fetchApplicationsPage,
   PAGE_SIZE_OPTIONS,
   type ApplicationFilters,
-  type PageMeta,
 } from "@/lib/applications"
+import { type PageMeta } from "@/lib/pagination"
 import { type ApplicationRecord } from "@/components/applications/applications-types"
 import { ApplicationsFilters } from "@/components/applications/applications-filters"
-import { ApplicationsPagination } from "@/components/applications/applications-pagination"
 import { ApplicationsTable } from "@/components/applications/applications-table"
+import { TablePagination } from "@/components/shared/table-pagination"
 
 type Query = { filters: ApplicationFilters; page: number; perPage: number }
 
@@ -97,8 +97,9 @@ export function ApplicationsManagement() {
         <>
           <ApplicationsTable applications={applications} loading={loading} />
           {meta ? (
-            <ApplicationsPagination
+            <TablePagination
               meta={meta}
+              sizes={PAGE_SIZE_OPTIONS}
               disabled={loading}
               onPageChange={(page) => changeQuery({ page })}
               onPerPageChange={(perPage) => changeQuery({ perPage })}

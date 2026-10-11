@@ -31,7 +31,7 @@ export function SettingsPage() {
   }, [])
 
   return (
-    <div className="max-w-3xl space-y-5">
+    <div className="max-w-3xl space-y-5 xl:max-w-none">
       {error ? <FormNotice tone="error">{error}</FormNotice> : null}
 
       {!data && !error ? (
@@ -41,11 +41,14 @@ export function SettingsPage() {
       ) : null}
 
       {data ? (
-        <>
+        // One column on smaller screens; from xl the profile on the left, preferences and security on the right.
+        <div className="grid items-start gap-5 xl:grid-cols-2">
           <ProfileSection profile={data.profile} />
-          <PreferencesSection preferences={data.preferences} />
-          <SecuritySection />
-        </>
+          <div className="space-y-5">
+            <PreferencesSection preferences={data.preferences} />
+            <SecuritySection />
+          </div>
+        </div>
       ) : null}
     </div>
   )

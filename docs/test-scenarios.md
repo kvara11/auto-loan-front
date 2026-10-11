@@ -76,6 +76,10 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 
 Files: `components/settings/settings-page.tsx`, `profile-section.tsx`, `preferences-section.tsx`, `security-section.tsx`, `settings-section.tsx`, `lib/settings.ts`, `lib/ui-preferences.ts`, `components/theme-sync.tsx`.
 
+### Layout
+
+0. **Columns.** Below 1280 px the three sections are one column (max 48 rem). From 1280 px (`xl`): "პირადი ინფორმაცია" on the left, "ინტერფეისის პარამეტრები" and "უსაფრთხოება" stacked on the right. No horizontal scroll at 375.
+
 ### Load
 
 1. **Load.** `GET /api/settings` → `data.profile` (`first_name`, `last_name`, `username`, `email`) and `data.preferences` (`theme`, `sidebar_collapsed`, `notifications`, `alert_sound`, already typed with defaults). A spinner shows while loading.
@@ -153,6 +157,17 @@ Files: `app/dashboard/branches/page.tsx`, `components/branches/*`.
 4. **Duplicate.** An existing code or name → the 424 message appears under the field and the dialog stays open.
 5. **Edit.** `PUT` with code and name keeps the current status.
 6. **Deactivate / activate.** The power button sends `PUT` with `is_active` flipped; the badge switches between "აქტიური" and "გათიშული". There is no delete.
+
+## 4c. Change log (T-206)
+
+Files: `app/dashboard/audit/page.tsx`, `components/audit/*`, `lib/audit.ts`, `components/shared/*`.
+
+1. **Menu.** Super-admin, administrator and auditor see "ცვლილებების ჟურნალი" under "ადმინისტრაცია" (the auditor sees only this item there). Officers, risk and branch managers don't; opening `/dashboard/audit` shows "ცვლილებების ჟურნალის ნახვის უფლება არ გაქვთ." (API 401).
+2. **Load.** `GET /api/admin/audit-events?page=1&per_page=50` → newest first: time, who (avatar + name; "სისტემაში შეუსვლელი" for a failed sign-in), action badge (red: failed sign-in, blocking, deletions; amber: password, settings; green: created/activated; blue: clients), subject (name + type), IP (from `lg`). No entries → "ჩანაწერები ვერ მოიძებნა".
+3. **Details.** Clicking a row (also with the keyboard: it's a button, `aria-expanded`) opens ველი | იყო | გახდა with Georgian field names; empty → "—", booleans → "კი/არა"; a permission change shows "+ name" / "− name" badges; password change and the reference-data update show "დამატებითი მონაცემები არ არის.". On mobile the rows stack and the details wrap (no horizontal scroll); the IP is shown under the details below `lg`.
+4. **What appears.** An admin edits a user → "მომხმარებელი შეიცვალა" with only the changed fields (role and branch by name); saving without changes adds nothing. An officer edits a client's phone → "კლიენტის მონაცემები შეიცვალა" with the old and new phone. A wrong password → "წარუმატებელი შესვლა" with the typed username and the reason. A successful sign-in, logout and own profile/avatar/preferences changes do **not** appear. A password never appears.
+5. **Filters.** Search (subject name or the actor's username, 350 ms debounce), action, subject type, date from/to; every change reloads from page 1; "გასუფთავება" resets all, including the search box. Invalid values → the backend's Georgian message.
+6. **Pagination.** `TablePagination` with 25 / 50 / 100 per page.
 
 ## 5. Applications list, detail page and workflow
 

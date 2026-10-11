@@ -8,13 +8,19 @@ import { Label } from "@/components/ui/label"
 
 const DEBOUNCE_MS = 350
 
-type ApplicationsSearchProps = {
+type DebouncedSearchProps = {
+  id: string
+  label: string
+  placeholder: string
   value: string
   onChange: (value: string) => void
+  maxLength?: number
+  // "numeric" for personal IDs (mobile keyboard).
+  inputMode?: "numeric" | "text"
 }
 
-// Personal ID search: applies after a short pause in typing, so each keystroke doesn't reload the list.
-export function ApplicationsSearch({ value, onChange }: ApplicationsSearchProps) {
+// A list search that applies after a short pause in typing, so each keystroke doesn't reload the list.
+export function DebouncedSearch({ id, label, placeholder, value, onChange, maxLength = 50, inputMode = "text" }: DebouncedSearchProps) {
   const [text, setText] = useState(value)
   const [synced, setSynced] = useState(value)
 
@@ -38,16 +44,16 @@ export function ApplicationsSearch({ value, onChange }: ApplicationsSearchProps)
 
   return (
     <div className="space-y-2">
-      <Label htmlFor="filter-search">პირადი ნომერი</Label>
+      <Label htmlFor={id}>{label}</Label>
       <div className="relative">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          id="filter-search"
+          id={id}
           type="search"
-          inputMode="numeric"
+          inputMode={inputMode}
           autoComplete="off"
-          maxLength={50}
-          placeholder="კლიენტის პირადი ნომერი"
+          maxLength={maxLength}
+          placeholder={placeholder}
           className="h-10 pl-9 tabular-nums"
           value={text}
           onChange={(event) => setText(event.target.value)}
