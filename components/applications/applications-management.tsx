@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,8 @@ import { useAuthUser } from "@/lib/auth-storage"
 import {
   defaultApplicationFilters,
   fetchApplicationsPage,
+  listFilterSearch,
+  readListFilters,
   PAGE_SIZE_OPTIONS,
   type ApplicationFilters,
 } from "@/lib/applications"
@@ -21,14 +24,23 @@ import { TablePagination } from "@/components/shared/table-pagination"
 
 type Query = { filters: ApplicationFilters; page: number; perPage: number }
 
-const initialQuery = (): Query => ({ filters: defaultApplicationFilters(), page: 1, perPage: PAGE_SIZE_OPTIONS[1] })
 
 export function ApplicationsManagement() {
   const [applications, setApplications] = useState<ApplicationRecord[]>([])
   const [meta, setMeta] = useState<PageMeta>()
-  const [query, setQuery] = useState<Query>(initialQuery)
+  const params = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [query, setQuery] = useState<Query>(() => ({ filters: readListFilters(params), page: 1, perPage: PAGE_SIZE_OPTIONS[1] }))
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | undefined>()
+  // The filters follow the URL: a link or back/forward with other filters replaces them.
+  const [urlKey, setUrlKey] = useState(params.toString())
+  if (params.toString() !== urlKey) {
+    setUrlKey(params.toString())
+    setLoading(true)
+    setQuery((current) => ({ ...current, page: 1, filters: readListFilters(params) }))
+  }
   // UX only: the backend enforces applications.create on POST /api/applications.
   const canCreate = useAuthUser()?.permissions?.includes("applications.create") ?? false
 
@@ -64,6 +76,11 @@ export function ApplicationsManagement() {
 
   const changeQuery = (next: Partial<Query>) => {
     setLoading(true)
+    if (next.filters) {
+      const search = listFilterSearch(next.filters)
+      setUrlKey(search)
+      router.replace(search ? `${pathname}?${search}` : pathname, { scroll: false })
+    }
     // New filters or page size start from the first page.
     setQuery((current) => ({ ...current, page: 1, ...next }))
   }

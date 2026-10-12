@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getStatusInfo, STATUS_ORDER } from "@/lib/application-status"
+import { AttentionChip } from "@/components/applications/attention-chip"
 import { defaultApplicationFilters, type ApplicationFilters } from "@/lib/applications"
 import { PERSONAL_ID_WIDTH } from "@/lib/utils"
 
@@ -67,6 +68,8 @@ export function ApplicationsFilters({ value, loading, onSearch, action }: Applic
           </div>
         </div>
       </div>
+
+      {value.attention ? <AttentionChip value={value.attention} onClear={() => onSearch(defaults)} /> : null}
 
       {/* Row 2: status, created-date range, search and reset. Fixed widths on wider screens; full width on mobile. */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">

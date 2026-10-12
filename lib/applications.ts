@@ -4,19 +4,39 @@ import {
   type ApplicationRecord,
   type HistoryEntry,
 } from "@/components/applications/applications-types"
+import { isAttentionKey } from "@/lib/application-attention"
 import { api } from "@/lib/axios"
 import { recentDateRange } from "@/lib/format"
 import { type PageMeta } from "@/lib/pagination"
 
 export const APPLICATIONS_URL = "/api/applications"
 
-// List filters; "" means no filter. Dates are "YYYY-MM-DD", inclusive, on created_at; search is part of the client's personal ID.
-export type ApplicationFilters = { status: string; start_date: string; end_date: string; search: string }
+// List filters; "" means no filter. Dates are "YYYY-MM-DD", inclusive, on created_at; search is part of the client's personal ID;
+// attention is a dashboard "ყურადღება!" category (lib/application-attention.ts).
+export type ApplicationFilters = { status: string; start_date: string; end_date: string; search: string; attention: string }
 
-export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "", search: "" }
+export const EMPTY_APPLICATION_FILTERS: ApplicationFilters = { status: "", start_date: "", end_date: "", search: "", attention: "" }
+
+const FILTER_KEYS = Object.keys(EMPTY_APPLICATION_FILTERS) as Array<keyof ApplicationFilters>
 
 // The list page opens on the last week (a big scope would be slow to count and page); "გასუფთავება" goes back to it.
 export const defaultApplicationFilters = (): ApplicationFilters => ({ ...EMPTY_APPLICATION_FILTERS, ...recentDateRange() })
+
+// The list's filters live in the URL (?status=&start_date=&end_date=&search=&attention=), so a dashboard link
+// opens exactly its applications and back/refresh keep them. No filter in the URL → the last-week default;
+// a link with filters (e.g. ?attention=returned) uses only those, without the default dates.
+export function readListFilters(params: URLSearchParams): ApplicationFilters {
+  const given = FILTER_KEYS.filter((key) => params.get(key))
+  if (given.length === 0) return defaultApplicationFilters()
+
+  const filters = { ...EMPTY_APPLICATION_FILTERS }
+  for (const key of given) filters[key] = params.get(key) ?? ""
+  if (filters.attention && !isAttentionKey(filters.attention)) filters.attention = ""
+  return filters
+}
+
+export const listFilterSearch = (filters: ApplicationFilters) =>
+  new URLSearchParams(Object.entries(filters).filter(([, value]) => value !== "")).toString()
 
 export const PAGE_SIZE_OPTIONS = [10, 20, 50]
 
