@@ -81,13 +81,23 @@ Files: `components/dashboard/*`, `app/not-found.tsx`.
 
 Files: `components/dashboard/notification-bell.tsx`, `components/dashboard/use-notifications.ts`, `lib/notifications.ts`, `public/sounds/notification.wav`.
 
-1. **Who sees the bell.** Users with any `applications.view.*` (officer, risk and branch managers, auditor, super-admin); not the administrator.
+1. **Who sees the bell.** Every signed-in user (since T-209; the administrator gets feedback replies).
 2. **Submit.** An officer sends an application to risks → within 30 s (or when the window regains focus) every risk manager's bell shows "1" and the chime plays once. The officer gets nothing for their own action. There is no setting to turn notifications off (only the sound).
 3. **Decision.** The risk manager returns / approves / rejects → the officer's bell shows it; return and reject show the reason in quotes.
 4. **List.** Clicking the bell lists the latest 20: unread ones are bold with a dot; "შეტყობინებები არ არის" when empty. "ყველას წაკითხულად მონიშვნა" clears the badge.
 5. **Open.** Clicking a notification marks it read (badge −1) and opens the application's page.
 6. **Sound.** Plays only for a newer unread notification, not again after a page change or reload in the same tab; never when "ხმოვანი სიგნალი" is off in settings (takes effect right after saving). The browser may stay silent until the user has clicked something on the page.
 7. **Mobile.** At 375 the menu fits the screen (max width = screen − 2 rem), no horizontal scroll.
+
+## 2c. Feedback (T-209)
+
+Files: `components/dashboard/feedback-button.tsx`, `components/feedback/*`, `lib/feedback.ts`, `app/dashboard/feedback/page.tsx`.
+
+1. **Button.** Every user has the speech-bubble button left of the theme toggle ("უკუკავშირი"); it opens "მოგვწერეთ" with ხარვეზი/რჩევა, a text box (counter 0 / 2000) and "გაგზავნა" (disabled while empty).
+2. **Send.** → "მადლობა! შეტყობინება გაიგზავნა.", the text clears; the entry keeps the page it was written on. An error shows in the popover.
+3. **Page.** Only super-admin sees "ადმინისტრაცია → უკუკავშირი"; others get "უკუკავშირის ნახვის უფლება არ გაქვთ." by URL. Opens on "ახალი"; status and type filters; time, author (role · branch), type, page link, text, reply, status.
+4. **Reply.** The reply button → status + "პასუხი ავტორს" → "შენახვა"; the row shows the reply and the new status. The author's bell shows "თქვენს შეტყობინებას უპასუხეს" with the reply; changing only the status doesn't notify again.
+5. **Mobile (375 px).** The header fits (the title truncates), the rows stack, no horizontal scroll.
 
 ## 3. Settings
 

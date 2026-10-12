@@ -1,7 +1,7 @@
 import { api } from "@/lib/axios"
 import { API_ROUTES } from "@/lib/routes"
 
-// T-507: the signed-in user's own in-app notifications (workflow actions on applications).
+// T-507: the signed-in user's own in-app notifications (workflow actions on applications; T-209 feedback replies).
 
 export type AppNotification = {
   id: string
@@ -10,6 +10,8 @@ export type AppNotification = {
   comment: string | null
   application_id: number | null
   application_no: string | null
+  // A notification that isn't about an application opens this path (none yet: a feedback reply only shows its text).
+  link?: string | null
   actor: { id: number; name: string } | null
   read_at: string | null
   created_at: string

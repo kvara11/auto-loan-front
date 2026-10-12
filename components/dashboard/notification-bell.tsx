@@ -14,18 +14,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Loading } from "@/components/ui/loading"
-import { canViewApplications } from "@/lib/applications"
 import { useAuthUser } from "@/lib/auth-storage"
 import { formatDateTime } from "@/lib/format"
 import { type AppNotification, fetchNotifications, markAllNotificationsRead, markNotificationRead } from "@/lib/notifications"
 import { cn } from "@/lib/utils"
 
-// T-507: the bell in the top bar. Clicking a notification marks it read and opens its application.
+// T-507: the bell in the top bar. Clicking a notification marks it read and opens its application (or its link).
+// T-209: every signed-in user has it, since a feedback reply can reach anyone (an administrator too).
 export function NotificationBell() {
   const router = useRouter()
   const user = useAuthUser()
-  // Workflow notifications only concern people who work with applications.
-  const enabled = canViewApplications(user?.permissions)
+  const enabled = Boolean(user)
   const { unreadCount, setUnreadCount } = useNotifications(enabled, (user?.settings?.alert_sound ?? 1) === 1)
   const [items, setItems] = useState<AppNotification[]>()
 
@@ -48,6 +47,7 @@ export function NotificationBell() {
       setUnreadCount(await markNotificationRead(item.id).catch(() => Math.max(0, unreadCount - 1)))
     }
     if (item.application_id) router.push(`/dashboard/applications/${item.application_id}`)
+    else if (item.link) router.push(item.link)
   }
 
   const readAll = async () => {
@@ -107,7 +107,7 @@ function NotificationItem({ item, onSelect }: { item: AppNotification; onSelect:
       <span className={cn("mt-1.5 size-2 shrink-0 rounded-full", unread ? "bg-primary" : "bg-transparent")} aria-hidden="true" />
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className={cn("text-sm leading-snug", unread ? "font-semibold" : "text-muted-foreground")}>{item.title}</span>
-        {item.comment ? <span className="line-clamp-2 text-xs text-muted-foreground">„{item.comment}“</span> : null}
+        {item.comment ? <span className={cn("text-xs text-muted-foreground", item.action === "feedback_reply" ? "line-clamp-6" : "line-clamp-2")}>„{item.comment}“</span> : null}
         <span className="text-xs text-muted-foreground tabular-nums">
           {[item.actor?.name, formatDateTime(item.created_at)].filter(Boolean).join(" · ")}
         </span>

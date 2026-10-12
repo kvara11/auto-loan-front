@@ -46,7 +46,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 - Authenticated pages have no shared `layout.tsx`. Each page (`app/dashboard/**`, `app/settings`, `app/not-found.tsx`) wraps its own content in `<DashboardShell>`. Dashboard pages are thin server components, and the feature UI lives in `components/<feature>/` as client components.
 - Because every page mounts its own shell, shell state resets on each navigation. That includes the sidebar's collapsed state.
 - `DashboardShell` provides the mobile sidebar `Sheet`, the content padding and the content container (`w-full`, 1440px; wider than the rules' `max-w-7xl` so tables fit), so pages don't add them. It takes a required `title` (shown in the top bar) and an optional `breadcrumb` (`{ label, href }`, e.g. "განაცხადები / ახალი განაცხადი"); pages don't render their own page heading.
-- Top bar (`dashboard-header.tsx`): hamburger (mobile), breadcrumb + title, `ThemeToggle` (☀/☾; applies at once, writes `localStorage` and saves `PUT /api/settings/preferences`), `NotificationBell` (T-507, see below), `UserMenu` (avatar initials; name, `role.display_name` · branch; "პარამეტრები", "გასვლა").
+- Top bar (`dashboard-header.tsx`): hamburger (mobile), breadcrumb + title, `FeedbackButton` (T-209, see below), `ThemeToggle` (☀/☾; applies at once, writes `localStorage` and saves `PUT /api/settings/preferences`), `NotificationBell` (T-507, see below), `UserMenu` (avatar initials; name, `role.display_name` · branch; "პარამეტრები", "გასვლა").
 - If no user is cached, `DashboardShell` fetches `/api/auth/me`.
 - The sidebar is built from `user.modules`, a backend-provided tree with `route`, `icon`, `sort_order`, `is_active` and `children` fields.
   - A module with children and no route renders as a group label.
@@ -58,9 +58,14 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
 
 ### Notifications (T-507)
 
-- `NotificationBell` (`components/dashboard/notification-bell.tsx`) in the top bar, only for users with an `applications.view.*` permission. Notifications can't be turned off; only the sound can (settings). `useNotifications()` (`use-notifications.ts`) polls `GET /api/notifications/unread-count` every 30 s while the tab is visible and on window focus; the badge shows the count ("9+" above 9).
+- `NotificationBell` (`components/dashboard/notification-bell.tsx`) in the top bar, for **every** signed-in user (T-209: a feedback reply can reach anyone). A click opens the application, else the notification's `link`; a feedback reply (`action: feedback_reply`) shows up to 6 lines of the reply. Notifications can't be turned off; only the sound can (settings). `useNotifications()` (`use-notifications.ts`) polls `GET /api/notifications/unread-count` every 30 s while the tab is visible and on window focus; the badge shows the count ("9+" above 9).
 - Opening the bell loads `GET /api/notifications` into a `DropdownMenu`: title (bold + dot while unread), the reason in quotes, actor · time; "ყველას წაკითხულად მონიშვნა" → `POST …/read-all`. Clicking an item → `POST …/{id}/read`, then `/dashboard/applications/{id}`.
 - **Sound:** `public/sounds/notification.wav` (`NOTIFICATION_SOUND` in `lib/notifications.ts`; replace the file to change it) plays when `latest_unread_at` is newer than the value kept in `sessionStorage` (`auto-loan.notifications-latest`); the first check in a tab only records it, so page navigations (each page mounts its own shell) don't replay it. Only when the cached user's `settings.alert_sound` is 1 (default). Browsers block audio until the user has interacted with the page.
+
+### Feedback (T-209)
+
+- `FeedbackButton` (`components/dashboard/feedback-button.tsx`, left of the theme toggle; icon `MessageSquarePlus`, `aria-label`/`title` "უკუკავშირი"): a `Popover` "მოგვწერეთ" with ხარვეზი/რჩევა, a `Textarea` (≤ 2000, counter) and "გაგზავნა" → `POST /api/feedback` with `page` = the current path; the backend's thank-you message shows and the text clears. Every signed-in user.
+- `/dashboard/feedback` (backend module `feedback` under "ადმინისტრაცია", icon `message-square` → `MessageSquare`; **super-admin only**, `feedback.manage`): `components/feedback/*`, `lib/feedback.ts`. Status (default "ახალი") and type selects, rows like the change log (time; author avatar, name, role · branch; type badge + page link; the text; the reply; status badge), `TablePagination`. The reply button opens `FeedbackReplyDialog` (status ახალი/გაკეთდა/უარყოფილი + "პასუხი ავტორს") → `PUT`; the row updates in place. Without the permission → "უკუკავშირის ნახვის უფლება არ გაქვთ.".
 
 ### Settings and preferences
 
@@ -138,7 +143,7 @@ User-facing text is in Georgian. Write new labels, messages and zod validation e
   - `Badge`: see Status language above. `Skeleton` (`components/ui/skeleton.tsx`) for loading states; `components/ui/loading.tsx` is a custom spinner.
   - The shadcn CLI once added an unrelated npm package `cn` and imported `cn` from it; after `npx shadcn add`, check `package.json` and keep `import { cn } from "@/lib/utils"`.
   - `Table` is restyled to the design: uppercase 12px muted headers, 14px cell padding, `hover:bg-muted` rows.
-  - `Textarea` (`components/ui/textarea.tsx`) is used by the workflow dialog and the wizard. `Tabs` and `chart` (Recharts 3) were added for the dashboard. Not installed: Switch, Tooltip and Toast.
+  - `Textarea` (`components/ui/textarea.tsx`) is used by the workflow dialog and the wizard. `Tabs` and `chart` (Recharts 3) were added for the dashboard, `popover` for the feedback button. Not installed: Switch, Tooltip and Toast.
 - **Patterns to copy:**
   - Page title: pass `title` to `DashboardShell` (top bar). Section card: `rounded-xl border bg-card p-5 shadow-sm sm:p-[22px]` with an `h2.text-[17px] font-semibold`.
   - Field: `div.space-y-2` with a `Label` and an `Input className="h-10"`. Use react-hook-form's `Form*` components where possible, and rely on `aria-invalid` for error styling.
