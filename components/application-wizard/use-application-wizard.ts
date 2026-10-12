@@ -16,10 +16,12 @@ export type WizardState = ReturnType<typeof useApplicationWizard>
 
 // The new/edit application wizard: step 1 client, step 2 loan + vehicle; "მონახაზად შენახვა"
 // saves a Draft (partial is fine), "გაგზავნა რისკებში" saves and submits (T-402, T-409).
-export function useApplicationWizard(applicationId?: string) {
+export function useApplicationWizard(applicationId?: string, personalId?: string) {
+  // A new application from a client page (?personal_id=) starts with that client looked up.
+  const prefill = !applicationId && personalId && PERSONAL_ID.test(personalId) ? personalId : ""
   const router = useRouter()
   const client = useClientStep()
-  const [form, setForm] = useState<WizardForm>(DEFAULT_FORM)
+  const [form, setForm] = useState<WizardForm>(() => ({ ...DEFAULT_FORM, personal_id: prefill }))
   const [errors, setErrors] = useState<WizardErrors>({})
   const [step, setStep] = useState<1 | 2>(1)
   const [appId, setAppId] = useState<number | null>(null)
@@ -75,6 +77,11 @@ export function useApplicationWizard(applicationId?: string) {
       return merged
     })
   }
+
+  useEffect(() => {
+    if (prefill) void lookup(prefill)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, on mount
+  }, [])
 
   // "კლიენტის მოხსნა": takes the client off this form (the client itself isn't touched) and starts a new lookup.
   const resetClient = () => {

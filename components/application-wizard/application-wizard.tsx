@@ -17,8 +17,8 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 
 // New application (no id) or editing a Draft/Returned one (id). Design: NewApplicationWizard.
-export function ApplicationWizard({ applicationId }: { applicationId?: string }) {
-  const wizard = useApplicationWizard(applicationId)
+export function ApplicationWizard({ applicationId, personalId }: { applicationId?: string; personalId?: string }) {
+  const wizard = useApplicationWizard(applicationId, personalId)
   const card = { form: wizard.form, errors: wizard.errors, set: wizard.set }
 
   if (wizard.loadError) {

@@ -1,3 +1,5 @@
+import Link from "next/link"
+
 import { type ApplicationRecord } from "@/components/applications/applications-types"
 import { InfoCard } from "@/components/application-detail/info-card"
 import { MARITAL_OPTIONS, optionLabel } from "@/components/application-wizard/wizard-options"
@@ -10,15 +12,24 @@ const percent = (value: string | number | null | undefined) =>
 // Amount columns default to 0 when a draft leaves them empty, so 0 shows as "—".
 const money = (value: string | number | null | undefined, currency: string) => (Number(value) > 0 ? formatMoney(value, currency) : null)
 
-export function ClientCard({ app }: { app: ApplicationRecord }) {
+// `clientLink`: the viewer has clients.view, so the name opens the client page.
+export function ClientCard({ app, clientLink }: { app: ApplicationRecord; clientLink?: boolean }) {
   const { client } = app
   const coBorrower = app.co_borrower_name || app.guarantor_name
+  const name = `${client.first_name} ${client.last_name}`
 
   return (
     <InfoCard
       title="კლიენტი"
       items={[
-        { label: "სახელი, გვარი", value: `${client.first_name} ${client.last_name}` },
+        {
+          label: "სახელი, გვარი",
+          value: clientLink ? (
+            <Link href={`/dashboard/clients/${client.id}`} className="text-primary underline-offset-4 hover:underline">
+              {name}
+            </Link>
+          ) : name,
+        },
         { label: "პირადი ნომერი", value: client.personal_id, numeric: true },
         { label: "ტელეფონი", value: client.phone, numeric: true },
         { label: "ელ-ფოსტა", value: client.email },

@@ -11,6 +11,7 @@ import {
   ChartBar,
   CheckCheck,
   Circle,
+  Contact,
   FileText,
   History,
   KeyRound,
@@ -38,6 +39,7 @@ const iconMap: Record<string, LucideIcon> = {
   settings: Settings,
   "building-2": Building2,
   history: History,
+  contact: Contact,
 }
 
 // "/dashboard" only matches itself; other routes also match their sub-pages.

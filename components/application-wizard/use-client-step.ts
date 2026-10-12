@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 
-import { toClientPayload } from "@/components/application-wizard/wizard-payload"
+import { clientFormFields, toClientPayload } from "@/components/application-wizard/wizard-payload"
 import { type WizardForm } from "@/components/application-wizard/wizard-form"
 import { api } from "@/lib/axios"
 
@@ -28,14 +28,9 @@ export function useClientStep() {
         return null
       }
 
-      const fields: Partial<WizardForm> = {
-        first_name: String(client.first_name ?? ""), last_name: String(client.last_name ?? ""),
-        birth_date: String(client.birth_date ?? "").slice(0, 10), phone: String(client.phone ?? ""),
-        email: String(client.email ?? ""), address: String(client.address ?? ""),
-        legal_address: String(client.legal_address ?? ""), marital_status: String(client.marital_status ?? ""),
-        family_members: client.family_members === null || client.family_members === undefined ? "" : String(client.family_members),
-        legal_address_verified: Boolean(client.legal_address_verified),
-      }
+      // The typed personal ID stays as entered.
+      const fields = clientFormFields(client)
+      delete fields.personal_id
       setClientId(client.id)
       setStatus("existing")
       return fields

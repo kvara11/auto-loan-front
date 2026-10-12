@@ -51,8 +51,9 @@ async function getList(params: Record<string, string | number>) {
 }
 
 // One page of the list, already limited by the backend to the user's data scope and filtered (GET /api/applications?page=&per_page=) with meta {current_page, per_page, total, last_page}.
-export async function fetchApplicationsPage(filters: ApplicationFilters, page: number, perPage: number) {
-  const { applications, meta } = await getList({ ...filterParams(filters), page, per_page: perPage })
+// `extra` adds filters that aren't in the list's URL, e.g. { client_id } on the client page.
+export async function fetchApplicationsPage(filters: ApplicationFilters, page: number, perPage: number, extra: Record<string, number> = {}) {
+  const { applications, meta } = await getList({ ...filterParams(filters), ...extra, page, per_page: perPage })
   const fallback: PageMeta = { current_page: page, per_page: perPage, total: applications.length, last_page: 1 }
 
   return { applications, meta: (meta as PageMeta | undefined) ?? fallback }

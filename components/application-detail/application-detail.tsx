@@ -17,6 +17,7 @@ import { FormNotice } from "@/components/settings/settings-section"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { fetchApplication, fetchHistory } from "@/lib/applications"
+import { useAuthUser } from "@/lib/auth-storage"
 import { getApiErrorMessage } from "@/lib/axios"
 
 export function ApplicationDetail({ id }: { id: string }) {
@@ -25,6 +26,8 @@ export function ApplicationDetail({ id }: { id: string }) {
   const [error, setError] = useState<string>()
   const [notice, setNotice] = useState<string>()
   const [dialogAction, setDialogAction] = useState<ApplicationAction | null>(null)
+  // UX only: the client page needs clients.view on the backend.
+  const canViewClient = useAuthUser()?.permissions?.includes("clients.view") ?? false
 
   const loadHistory = useCallback(() => {
     fetchHistory(id).then(setHistory).catch(() => setHistory([]))
@@ -85,7 +88,7 @@ export function ApplicationDetail({ id }: { id: string }) {
 
       <div className="grid items-start gap-5 lg:grid-cols-[2fr_1fr]">
         <div className="flex min-w-0 flex-col gap-5">
-          <ClientCard app={app} />
+          <ClientCard app={app} clientLink={canViewClient} />
           <IncomeInfoCard app={app} />
           <LoanCard app={app} />
           <VehicleCard app={app} />

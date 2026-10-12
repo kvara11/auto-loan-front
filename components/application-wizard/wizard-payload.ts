@@ -16,6 +16,17 @@ const INCOME_NUMBERS = new Set(["existing_liabilities", "work_experience_months"
 
 const blankToNull = (value: string) => (value.trim() === "" ? null : value.trim())
 
+// A registry client (GET /api/clients/…) as the form's client fields; used by the wizard lookup and the client page.
+export function clientFormFields(client: Partial<Record<(typeof CLIENT_FIELDS)[number], unknown>>): Partial<WizardForm> {
+  const text = (value: unknown) => (value === null || value === undefined ? "" : String(value))
+  return {
+    personal_id: text(client.personal_id), first_name: text(client.first_name), last_name: text(client.last_name),
+    birth_date: text(client.birth_date).slice(0, 10), phone: text(client.phone), email: text(client.email),
+    address: text(client.address), legal_address: text(client.legal_address), marital_status: text(client.marital_status),
+    family_members: text(client.family_members), legal_address_verified: Boolean(client.legal_address_verified),
+  }
+}
+
 // POST/PUT /api/clients body.
 export function toClientPayload(form: WizardForm) {
   return {

@@ -269,6 +269,20 @@ Files: `components/applications/applications-management.tsx`, `applications-tabl
 23. **Stale page.** Two risk managers act on the same application: the second gets 409 "ეს ქმედება განაცხადის მიმდინარე სტატუსზე დაუშვებელია." in the dialog; reload shows the real state.
 24. **Super-admin on their own application.** The decision buttons are absent (backend SoD); a direct POST → 403.
 
+## 5b. Clients (T-305)
+
+Files: `app/dashboard/clients/**`, `components/clients/*`, `components/client-detail/*`, `lib/clients.ts`.
+
+1. **Menu.** Officer, branch manager, risk manager, auditor and super-admin see "კლიენტები" under "ოპერაციები"; the administrator doesn't, and `/dashboard/clients` shows "კლიენტების ნახვის უფლება არ გაქვთ.".
+2. **Load.** `GET /api/clients?page=1&per_page=20` → every registered client (also those without applications and from other branches), newest first; footer "ნაჩვენებია X–Y / N". No clients → "კლიენტები ჯერ არ არის".
+3. **Counts.** "განაცხადები" and "ბოლო განაცხადი" count only applications the viewer can see (an officer: own; a risk manager: not drafts; the auditor: all) — a client of another officer shows 0 / "—" for an officer.
+4. **Search.** Part of the personal ID, the phone or "სახელი გვარი"; nothing is sent while typing; "ძიება"/Enter sends from page 1 and writes `?search=` into the URL (refresh and back keep it); "გასუფთავება" empties it (disabled when already empty). No match → "კლიენტი ვერ მოიძებნა". Over 50 characters → the backend's Georgian message.
+5. **Client page.** The eye opens `/dashboard/clients/:id`: name, personal ID, profile (birth date, phone, email, marital status, family members, both addresses, address verification with its date), the client's visible applications (same table as the list, eye → application). A missing id → the backend message + "კლიენტების სია".
+6. **Edit.** "რედაქტირება" (officer, `clients.update`) opens the dialog with the wizard's client fields; the personal ID is shown, not editable. An empty name / birth date / phone or a bad email → message under the field, no request; a backend 424 → under the field + banner; success closes the dialog, updates the profile and shows "კლიენტის მონაცემები განახლდა." (unchanged save writes nothing to the change log). Risk manager, branch manager and auditor have no button.
+7. **New application.** "ახალი განაცხადი" (officer) opens the wizard with `?personal_id=`; the client is looked up at once ("— მოიძებნა") and the fields are filled.
+8. **From an application.** On `/dashboard/applications/:id` the client's name is a link to the client page (for `clients.view`).
+9. **Mobile (375 px).** Phone, email and dates hide; name + personal ID, count and the eye stay; the client page stacks; no horizontal scroll.
+
 ## 6. New application wizard, step 1: client
 
 Files: `components/application-wizard/*` (`client-lookup-card.tsx`, `client-details-card.tsx`, `use-client-step.ts`, `use-application-wizard.ts`), `app/dashboard/applications/new/page.tsx`.
